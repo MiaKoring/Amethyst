@@ -28,16 +28,16 @@ class ContentViewModel: NSObject, ObservableObject, Identifiable {
     var isLoaded: Bool = false
     var sidebarOrientation: SidebarOrientations
     var showSetup: Bool = false
-    
+
     var window: NSWindow? = nil
-    
+
     var onClose: (() -> Void)?
-    
+
     init(id: String) {
         self.id = id
         self.sidebarOrientation = UDKey.sidebarOrientation.boolValue ? .tabsTrailing: .tabsLeading
     }
-    
+
     func handleClose() {
         guard let index = tabs.firstIndex(where: {$0.id == currentTab}) else { return }
         if tabs.count > 1 {
@@ -48,12 +48,12 @@ class ContentViewModel: NSObject, ObservableObject, Identifiable {
             currentTab = nil
         }
     }
-    
-    
+
+
     func tabFor(id: UUID?) -> ATab? {
         return tabs.first(where: {$0.id == id})
     }
-    
+
     func closeTab(id: UUID) {
         Task {
             await tabs.first(where: {$0.id == id})?.webViewModel.cleanup()
@@ -63,7 +63,7 @@ class ContentViewModel: NSObject, ObservableObject, Identifiable {
             tabs.removeAll(where: {$0.id == id})
         }
     }
-    
+
     func changeToTab(id: UUID) {
         if let currentTab = tabs.first(where: {$0.id == currentTab}) {
             currentTab.webViewModel.removeHighlights()
@@ -75,7 +75,7 @@ class ContentViewModel: NSObject, ObservableObject, Identifiable {
 
 struct ContentView {
     static let logger = Logger(subsystem: AmethystApp.subSystem, category: "ContentViewModel")
-    
+
     @Environment(AppViewModel.self) var appViewModel: AppViewModel
     @Environment(ContentViewModel.self) var contentViewModel: ContentViewModel
     @Environment(\.dismissWindow) var dismissWindow
@@ -85,7 +85,8 @@ struct ContentView {
     @State var macosWindowIconsHovered: Bool = false
     @Environment(\.scenePhase) var scenePhase
     @State var showHistory = false
-    
+    @State var historyModalSize = CGSize(width: 400, height: 500)
+
     func onAppear() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             if let window = contentViewModel.window, let id = window.identifier?.rawValue {
@@ -110,21 +111,21 @@ struct ContentView {
                 return
             }
         }
-        
+
         if let newURL = appViewModel.newURLToOpen {
             appViewModel.newURLToOpen = nil
-            
+
             let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel)
             vm.load(url: newURL)
             let newTab = ATab(webViewModel: vm)
-            
+
             contentViewModel.tabs.append(newTab)
             contentViewModel.currentTab = newTab.id
         }
         if contentViewModel.tabs.isEmpty {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 let savedTabs = CDTabController.fetchAllFor(windowID: contentViewModel.id)
-                
+
                 var memoizedIDs = [UUID]()
                 for savedTab in savedTabs {
                     guard let id = savedTab.tabID, !memoizedIDs.contains(id) else {
@@ -143,4 +144,3 @@ struct ContentView {
     }
 
 }
-

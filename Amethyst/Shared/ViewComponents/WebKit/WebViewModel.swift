@@ -24,14 +24,14 @@ class WebViewModel: NSObject, ObservableObject {
     @Published var blockDownloadCheckforURL: URL? = nil
     @ObservedObject var contentViewModel: ContentViewModel
     @ObservedObject var appViewModel: AppViewModel
-    
+
     var referer: String? = nil
-    
+
     var historyBlocked: [URL: Double] = [:]
     var webView: AWKWebView?
     var cancellables: Set<AnyCancellable> = []
     var cache: Bool? = nil
-    
+
     // MARK: - Initializers
 
     // This is the new Designated Initializer. It's the most fundamental one.
@@ -50,7 +50,7 @@ class WebViewModel: NSObject, ObservableObject {
         self.setupBindings()
         self.injectAllJS()
     }
-    
+
     // Convenience init for a standard new tab.
     // It derives the processPool from the contentViewModel.
     convenience init(contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
@@ -58,7 +58,7 @@ class WebViewModel: NSObject, ObservableObject {
         // No special configuration needed, so we call the designated init directly.
         self.init(configuration: config, contentViewModel: contentViewModel, appViewModel: appViewModel)
     }
-    
+
     init(config: WKWebViewConfiguration, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
         self.contentViewModel = contentViewModel
         self.appViewModel = appViewModel
@@ -70,28 +70,28 @@ class WebViewModel: NSObject, ObservableObject {
         self.webView?.navigationDelegate = self
         self.webView?.allowsLinkPreview = true
         self.webView?.isInspectable = true
-        
+
         setupBindings()
         injectAllJS()
     }
-    
+
     deinit {
         webView?.stopLoading()
-        
+
         let userContentController = webView?.configuration.userContentController
         userContentController?.removeAllUserScripts()
         userContentController?.removeScriptMessageHandler(forName: "webauthn")
-        
+
         webView?.uiDelegate = nil
         webView?.navigationDelegate = nil
-        
+
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
-        
+
         webView?.removeFromSuperview()
         webView = nil
     }
-    
+
     func cleanup() async {
         // 1. Perform all async cleanup operations first.
         // We can safely await them here because we are in an async context
@@ -121,20 +121,20 @@ class WebViewModel: NSObject, ObservableObject {
         webView?.removeFromSuperview()
         webView = nil
     }
-    
+
     func goBack() {
         if canGoBack {
             webView?.goBack()
         }
     }
-    
+
     func goForward() {
         if canGoForward {
             webView?.goForward()
         }
     }
 
-    
+
     func getWebView() -> WKWebView {
         if let webView {
             return webView
@@ -146,32 +146,29 @@ class WebViewModel: NSObject, ObservableObject {
             self.webView?.underPageBackgroundColor = .myPurple
             self.webView?.allowsLinkPreview = true
             setupBindings()
-    
+
             return webView
         }
     }
-    
+
     func load(urlString: String) {
         guard let url = URL(string: urlString) else { return }
         load(url: url)
     }
-    
+
     func load(url: URL) {
         var request = URLRequest(url: url)
         request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
         request.setValue(Self.accept, forHTTPHeaderField: "Accept")
         webView?.load(request)
     }
-    
+
     func appendHistory() {
         if let url = currentURL, cache != nil {
             if let blockedTime = historyBlocked[url], blockedTime > Date().timeIntervalSinceReferenceDate {
                 return
             }
-            if let meili = appViewModel.meili {
-                addToHistory(meili: meili, url: url)
-            }
-            
+
             let day = CDHistoryController.currentHistoryDay
             let item = HistoryItem()
             item.time = Date.now.timeIntervalSinceReferenceDate
@@ -179,45 +176,15 @@ class WebViewModel: NSObject, ObservableObject {
             item.title = title
             day.addHistoryItem(item)
             CDHistoryController.save()
-           
+
+            if let meili = appViewModel.meili {
+                HistorySearchIndexSync.syncExactURLStrings([url.absoluteString], meili: meili)
+            }
+
             historyBlocked[url] = Date.now.timeIntervalSinceReferenceDate + 300
         }
     }
-    
-    func addToHistory(meili: MeiliSearch, url: URL) {
-        typealias MeiliResult = Searchable<HistoryEntry>
-        SwiftUI.Task(priority: .background) {
-            let index = meili.index("history")
-            let param = SearchParameters(query: url.absoluteString, limit: 1, attributesToSearchOn: ["url"], filter: "url = '\(url.absoluteString)'")
-            do {
-                let result: MeiliResult = try await index.search(param)
-                if let res = result.hits.first {
-                    let new = HistoryEntry(id: res.id, title: self.title ?? res.title, url: res.url, lastSeen: Int(Date.now.timeIntervalSinceReferenceDate), amount: res.amount + 1)
-                    _ = try await index.updateDocuments(documents: [new], primaryKey: "id")
-                } else {
-                    let new = HistoryEntry(id: UUID(), title: self.title ?? "", url: url.absoluteString, lastSeen: Int(Date.now.timeIntervalSinceReferenceDate), amount: 1)
-                    _ = try await index.addDocuments(documents: [new], primaryKey: "id")
-                }
-            } catch let error as MeiliSearch.Error {
-                Self.logger.error("Error occured while appending Meili history: \(error.localizedDescription)")
-                if error.localizedDescription.contains("MeiliSearchApiError: Index `history` not found.") ||
-                    error.localizedDescription.contains("is not filterable") ||
-                    error.localizedDescription.contains("is not searchable") {
-                    do {
-                        _ = try await meili.createIndex(uid: "history", primaryKey: "id")
-                        _ = try await meili.index("history").updateSearchableAttributes(["url", "title"])
-                        _ = try await meili.index("history").updateFilterableAttributes(["url", "title", "id", "lastSeen", "amount"])
-                        _ = try await meili.index("history").updateSortableAttributes(["lastSeen", "amount"])
-                        let new = HistoryEntry(id: UUID(), title: self.title ?? "", url: url.absoluteString, lastSeen: Int(Date.now.timeIntervalSinceReferenceDate), amount: 1)
-                        _ = try await index.addDocuments(documents: [new], primaryKey: "id")
-                    } catch {
-                        Self.logger.error("Error occured while configuring Meili index: \(error.localizedDescription)")
-                    }
-                }
-            }
-        }
-    }
-    
+
     func setupBindings() {
         webView?.publisher(for: \.canGoBack)
             .receive(on: DispatchQueue.main)
@@ -255,14 +222,14 @@ class WebViewModel: NSObject, ObservableObject {
                 self?.title = value
             }
             .store(in: &cancellables)
-        
+
         webView?.publisher(for: \.cameraCaptureState)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] value in
                 self?.isUsingCamera = value
             }
             .store(in: &cancellables)
-        
+
         webView?.publisher(for: \.microphoneCaptureState)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] value in
@@ -270,13 +237,13 @@ class WebViewModel: NSObject, ObservableObject {
             }
             .store(in: &cancellables)
     }
-    
+
     private func injectAllJS() {
         injectJavaScript()
         injectCSSGlobally()
         injectAutofillCode()
     }
-   
+
     // MARK: - Private Helper Methods
 
     /// Configures the common properties of the AWKWebView instance.
@@ -322,15 +289,15 @@ class WebViewModel: NSObject, ObservableObject {
 
         return webConfiguration
     }
-    
+
 }
 
 extension WebViewModel: WKScriptMessageHandlerWithReply {
-    
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) async -> (Any?, String?) {
         print(message.body)
         return (false, "whatever")
     }
-    
-    
+
+
 }

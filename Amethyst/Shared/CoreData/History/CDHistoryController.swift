@@ -12,8 +12,8 @@ import OSLog
 class CDHistoryController {
     public static var shared = CDHistoryController(name: "History")
     var container: NSPersistentContainer
-    private static var logger = Logger(subsystem: AmethystApp.subSystem, category: "CDHistroryController")
-    
+    static var logger = Logger(subsystem: AmethystApp.subSystem, category: "CDHistroryController")
+
     private init(name: String) {
         container = NSPersistentContainer(name: name)
         container.loadPersistentStores { _, error in
@@ -22,7 +22,7 @@ class CDHistoryController {
             }
         }
     }
-    
+
     func fetchAll(sortDescriptors: [NSSortDescriptor] = []) -> [HistoryDay] {
         let request = HistoryDay.createFetchRequest()
         request.includesSubentities = false
@@ -34,43 +34,22 @@ class CDHistoryController {
         }
         return []
     }
-    
+
     func delete(_ item: HistoryItem) {
         container.viewContext.delete(item)
         save()
+        pruneEmptyDays()
     }
-    
-    func clearEntity() {
-        container.performBackgroundTask { context in
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "HistoryDay")
-            let batchDeleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            batchDeleteRequest.resultType = .resultTypeObjectIDs
 
-            do {
-                let result = try context.execute(batchDeleteRequest) as? NSBatchDeleteResult
-                
-                if let objectIDs = result?.result as? [NSManagedObjectID] {
-                    let changes = [NSDeletedObjectsKey: objectIDs]
-                    NSManagedObjectContext.mergeChanges(
-                        fromRemoteContextSave: changes,
-                        into: [self.container.viewContext]
-                    )
-                }
-            } catch {
-                Self.logger.error("An error occured while emptying HistoryDay: \(error.localizedDescription)")
-            }
-        }
-    }
-    
     func printKnownEntities() {
         Self.logger.info("Known Entities: \(self.container.managedObjectModel.entities.compactMap(\.name))")
     }
-    
+
     func insertHistoryDay(_ day: HistoryDay) {
         container.viewContext.insert(day)
         save()
     }
-    
+
     func save() {
         if container.viewContext.hasChanges {
             do {
@@ -80,7 +59,7 @@ class CDHistoryController {
             }
         }
     }
-    
+
     func dayFetchCount(_ predicate: Predicate<HistoryDay>) -> Int {
         let request = HistoryDay.createFetchRequest()
         request.predicate = NSPredicate(predicate)
@@ -91,7 +70,7 @@ class CDHistoryController {
         }
         return 0
     }
-    
+
     func itemFetchCount(_ predicate: Predicate<HistoryItem>) -> Int {
         let request = HistoryItem.createFetchRequest()
         request.predicate = NSPredicate(predicate)
@@ -102,7 +81,7 @@ class CDHistoryController {
         }
         return 0
     }
-    
+
     func fetchOrCreateHistoryDay() -> HistoryDay {
         let rangeStart = Calendar.current.startOfDay(for: Date.now).timeIntervalSinceReferenceDate
 
@@ -112,14 +91,14 @@ class CDHistoryController {
             $0.dayTime == rangeStart
         })
         request.fetchLimit = 1
-        
+
         do {
             if let day = try container.viewContext.fetch(request).first { return day }
         } catch {
             Self.logger.log("Failed to create HistoryDay: \(error.localizedDescription)")
         }
         return createAndSaveHistoryDay(rangeStart: rangeStart)
-        
+
         func createAndSaveHistoryDay(rangeStart: Double) -> HistoryDay {
             let day = HistoryDay()
             day.dayTime = rangeStart
@@ -127,40 +106,60 @@ class CDHistoryController {
             return day
         }
     }
-    
+
+    func pruneEmptyDays() {
+        let emptyDays = fetchAllHistoryDays().filter { $0.sortedItems.isEmpty }
+        guard !emptyDays.isEmpty else { return }
+
+        emptyDays.forEach { container.viewContext.delete($0) }
+        save()
+    }
+
 }
 
 extension CDHistoryController {
+    static func fetchAllHistoryDays() -> [HistoryDay] {
+        CDHistoryController.shared.fetchAllHistoryDays()
+    }
+
     static func fetchAll(sortDescriptors: [NSSortDescriptor] = []) -> [HistoryDay] {
         CDHistoryController.shared.fetchAll(sortDescriptors: sortDescriptors)
     }
-    
+
     static func save() {
         CDHistoryController.shared.save()
     }
-    
+
     static func insertHistoryDay(_ day: HistoryDay) {
         CDHistoryController.shared.insertHistoryDay(day)
     }
-    
+
     static func clear() {
         CDHistoryController.shared.clearEntity()
     }
-    
+
+    static func deleteAllVisits(matchingCanonicalURL canonicalURL: String) -> [String] {
+        CDHistoryController.shared.deleteAllVisits(matchingCanonicalURL: canonicalURL)
+    }
+
+    static func fetchSearchIndexSnapshots(for urlStrings: [String]) async -> [HistorySearchIndexSnapshot] {
+        await CDHistoryController.shared.fetchSearchIndexSnapshots(for: urlStrings)
+    }
+
     static func dayFetchCount(_ predicate: Predicate<HistoryDay>) -> Int {
         CDHistoryController.shared.dayFetchCount(predicate)
     }
-    
+
     static func itemFetchCount(_ predicate: Predicate<HistoryItem>) -> Int {
         CDHistoryController.shared.itemFetchCount(predicate)
     }
-    
+
     static func delete(_ item: HistoryItem) {
         CDHistoryController.shared.delete(item)
     }
-    
+
     static var currentHistoryDay: HistoryDay {
         CDHistoryController.shared.fetchOrCreateHistoryDay()
     }
-    
+
 }

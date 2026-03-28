@@ -47,6 +47,15 @@ extension ContentView: View, TabOpener {
                 .frame(maxWidth: max(550, min(reader.size.width / 2, 800)))
             }
             .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay {
+                if showHistory {
+                    HistoryOverlay(
+                        isPresented: $showHistory,
+                        modalSize: $historyModalSize,
+                        containerSize: reader.size
+                    )
+                }
+            }
             .onAppear(perform: onAppear)
             .onDisappear {
                 NotificationCenter.default.removeObserver(
@@ -59,10 +68,7 @@ extension ContentView: View, TabOpener {
             .onChange(of: contentViewModel.tabs) { if contentViewModel.tabs.isEmpty { contentViewModel.isSidebarShown = true } }
             .onChange(of: contentViewModel.currentTab) { if contentViewModel.currentTab != nil { contentViewModel.isLoaded = true } }
             .onChange(of: contentViewModel.showHistory) { showHistory = contentViewModel.showHistory }
-            .sheet(isPresented: $showHistory) { contentViewModel.showHistory = false } content: {
-                HistoryView()
-                    .frame(width: 400, height: 500)
-            }
+            .onChange(of: showHistory) { contentViewModel.showHistory = showHistory }
             .sheet(isPresented: $appViewModel.showsSetup) { appViewModel.showsSetup = false } content: {
                 Setup()
                     .frame(width: 700, height: 400)
@@ -74,7 +80,7 @@ extension ContentView: View, TabOpener {
             appViewModel.displayedWindows[id] = nil
         }
     }
-    
+
     private struct MacOSWindowButtonsOverlay: View {
         @Binding var macosWindowIconsHovered: Bool
         var body: some View {
@@ -97,12 +103,99 @@ extension ContentView: View, TabOpener {
             }
         }
     }
-    
+
+    private struct HistoryOverlay: View {
+        @Binding var isPresented: Bool
+        @Binding var modalSize: CGSize
+        let containerSize: CGSize
+
+        private let minWidth: CGFloat = 400
+        private let minHeight: CGFloat = 500
+        @State private var resizeStartSize: CGSize?
+
+        var body: some View {
+            ZStack {
+                Color.black.opacity(0.18)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        isPresented = false
+                    }
+
+                HistoryView()
+                    .frame(width: clampedWidth, height: clampedHeight)
+                    .background {
+                        RoundedRectangle(cornerRadius: 22)
+                            .fill(.regularMaterial)
+                            .shadow(color: .black.opacity(0.25), radius: 25, y: 12)
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.caption.bold())
+                            .foregroundStyle(.secondary)
+                            .padding(12)
+                            .contentShape(Rectangle())
+                            .gesture(resizeGesture)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 22))
+                    .contentShape(RoundedRectangle(cornerRadius: 22))
+                    .onTapGesture {
+                        // Keep taps inside the modal from dismissing the overlay.
+                    }
+                    .onKeyPress(.escape) {
+                        isPresented = false
+                        return .handled
+                    }
+            }
+            .transition(.opacity.animation(.linear(duration: 0.12)))
+        }
+
+        private var clampedWidth: CGFloat {
+            clamp(modalSize.width, min: minWidth, max: max(minWidth, containerSize.width - 80))
+        }
+
+        private var clampedHeight: CGFloat {
+            clamp(modalSize.height, min: minHeight, max: max(minHeight, containerSize.height - 80))
+        }
+
+        private var resizeGesture: some Gesture {
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    let startSize = resizeStartSize ?? modalSize
+                    if resizeStartSize == nil {
+                        resizeStartSize = modalSize
+                    }
+
+                    let newWidth = clamp(
+                        startSize.width + value.translation.width * 2,
+                        min: minWidth,
+                        max: max(minWidth, containerSize.width - 80)
+                    )
+                    let newHeight = clamp(
+                        startSize.height + value.translation.height * 2,
+                        min: minHeight,
+                        max: max(minHeight, containerSize.height - 80)
+                    )
+
+                    modalSize = CGSize(
+                        width: newWidth,
+                        height: newHeight
+                    )
+                }
+                .onEnded { _ in
+                    resizeStartSize = nil
+                }
+        }
+
+        private func clamp(_ value: CGFloat, min minValue: CGFloat, max maxValue: CGFloat) -> CGFloat {
+            Swift.min(Swift.max(value, minValue), maxValue)
+        }
+    }
+
     private struct FixedSidebar: View {
         @Environment(ContentViewModel.self) private var contentViewModel
         @State private var width: CGFloat
         let edge: HorizontalEdge
-        
+
         init(edge: HorizontalEdge) {
             self.edge = edge
             let storedWidth = edge == .trailing ? UDKey.trailingFixedSidebarWidth.doubleValue: UDKey.leadingFixedSidebarWidth.doubleValue
@@ -173,7 +266,7 @@ extension ContentView: View, TabOpener {
             }
         }
     }
-    
+
     private struct FloatingSidebars: View {
         @Environment(ContentViewModel.self) var contentViewModel
         var body: some View {
@@ -189,9 +282,9 @@ extension ContentView: View, TabOpener {
                 }
             }
         }
-        
+
     }
-    
+
     private struct InlineSearch: View {
         @Environment(ContentViewModel.self) var contentViewModel
         var body: some View {
@@ -209,7 +302,7 @@ extension ContentView: View, TabOpener {
             }
         }
     }
-    
+
     private struct WindowHighlighter: View {
         @Environment(AppViewModel.self) var appViewModel
         @Environment(ContentViewModel.self) var contentViewModel
@@ -229,7 +322,7 @@ extension ContentView: View, TabOpener {
             }
         }
     }
-    
+
     private struct MacosButtonHoverArea: View {
         @Binding var showMacosWindowIconsAreaHovered: Bool
         var body: some View {
@@ -248,7 +341,5 @@ extension ContentView: View, TabOpener {
             }
         }
     }
-    
+
 }
-
-

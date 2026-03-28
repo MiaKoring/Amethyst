@@ -98,6 +98,12 @@ To maintain the privacy and security of our users, **you are strictly prohibited
 
 Xcode will handle the build process. Simply select the target and click the "Run" button.
 
+If Xcode signing fails on a personal Apple development team because the browser target uses capabilities that are not supported there, you can still build locally from the command line without code signing:
+
+```bash
+xcodebuild -project 'Amethyst Project.xcodeproj' -scheme 'Amethyst Debug' -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+```
+
 ## Testing
 
 Currently, Amethyst does not have extensive unit tests due to the challenges of testing UI-heavy applications. Therefore, it is crucial that you thoroughly test your changes manually.
