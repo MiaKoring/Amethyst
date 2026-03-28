@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A6124C702E2E317C00791893 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6124C6F2E2E317C00791893 /* StoreKit.framework */; };
 		A614710F2D9480E9001BB587 /* AmethystAuthenticatorCore in Frameworks */ = {isa = PBXBuildFile; productRef = A614710E2D9480E9001BB587 /* AmethystAuthenticatorCore */; };
 		A61471112D9480F3001BB587 /* AmethystAuthenticatorCore in Frameworks */ = {isa = PBXBuildFile; productRef = A61471102D9480F3001BB587 /* AmethystAuthenticatorCore */; };
 		A61471132D9480FA001BB587 /* AmethystAuthenticatorCore in Frameworks */ = {isa = PBXBuildFile; productRef = A61471122D9480FA001BB587 /* AmethystAuthenticatorCore */; };
@@ -160,7 +159,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A6124C702E2E317C00791893 /* StoreKit.framework in Frameworks */,
 				A61471152D948799001BB587 /* AmethystAuthenticatorCore in Frameworks */,
 				A640BCD32D05E6A1007E62E0 /* MeiliSearch in Frameworks */,
 			);
@@ -649,7 +647,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Amethyst Browser.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 83;
+				CURRENT_PROJECT_VERSION = 95;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Amethyst/Preview Content\"";
 				DEVELOPMENT_TEAM = 68YWPYV749;
@@ -684,7 +682,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = de.touchthegrass.Amethyst;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;
@@ -706,7 +704,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Amethyst BrowserRelease.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 83;
+				CURRENT_PROJECT_VERSION = 95;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Amethyst/Preview Content\"";
 				DEVELOPMENT_TEAM = 68YWPYV749;
@@ -741,7 +739,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = de.touchthegrass.Amethyst;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = NO;
