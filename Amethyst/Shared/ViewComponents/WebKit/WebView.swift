@@ -11,16 +11,12 @@ struct WebView: View {
     @ObservedObject var webViewModel: WebViewModel
     @Environment(ContentViewModel.self) var contentViewModel
     @Environment(AppViewModel.self) var appViewModel
+    @FocusState var isFocused: Bool
     
     var body: some View {
         ZStack {
             WebViewNS(viewModel: webViewModel)
-                .if(tabID == contentViewModel.currentTab) { view in
-                    view
-                        /*.overlay(alignment: .bottomTrailing) {
-                            DownloadButton(webViewModel: webViewModel)
-                        }*/
-                }
+                .focused($isFocused)
                 .if(webViewModel.error != nil) { view in
                     view.allowsHitTesting(false)
                 }
@@ -36,6 +32,11 @@ struct WebView: View {
         .allowsHitTesting(tabID == contentViewModel.currentTab)
         .clipShape(RoundedRectangle(cornerRadius: AmethystApp.windowRound / 2))
         .padding(appViewModel.useMacOS26Design ? 8: 10)
+        .onChange(of: contentViewModel.currentTab) {
+            if contentViewModel.currentTab == tabID {
+                isFocused = true
+            }
+        }
     }
     
     private struct ErrorView: View {
