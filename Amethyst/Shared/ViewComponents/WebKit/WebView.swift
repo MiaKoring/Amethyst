@@ -87,6 +87,77 @@ struct WebView: View {
         var body: some View {
             ZStack {
                 LoadingProgress()
+                BackgroundTabCreatedInfo()
+                DownloadStartedInfo()
+            }
+            .padding(5)
+        }
+        
+        private struct BackgroundTabCreatedInfo: View {
+            @EnvironmentObject var webViewModel: WebViewModel
+            
+            var body: some View {
+                VStack {
+                    if webViewModel.backgroundTabCreatedOverlayTimer?.isValid == true {
+                        HStack {
+                            Text("Background Tab Created")
+                                .font(.title2)
+                                .fontWeight(.medium)
+                                .padding(10)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(.myPurple.opacity(0.5))
+                                        .background(.ultraThinMaterial)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        .overlay {
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(lineWidth: 3)
+                                                .fill(
+                                                    .myPurple
+                                                        .mix(with: .white, by: 0.15)
+                                                        .opacity(0.4)
+                                                )
+                                        }
+                                }
+                                .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                            Spacer()
+                        }
+                    }
+                    Spacer()
+                }
+                .animation(.easeIn(duration: 0.3), value: webViewModel.backgroundTabCreatedOverlayTimer?.isValid)
+            }
+        }
+        
+        private struct DownloadStartedInfo: View {
+            @EnvironmentObject var webViewModel: WebViewModel
+            @Environment(AppViewModel.self) var appViewModel: AppViewModel
+            
+            var body: some View {
+                VStack {
+                    Spacer()
+                    if webViewModel.downloadCreatedTimer?.isValid == true {
+                        HStack {
+                            Spacer()
+                            Image(nsImage: NSWorkspace.shared.icon(for: .data))
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 50)
+                                .shadow(radius: 5)
+                                .overlay {
+                                    Image(systemName: "arrow.down.app")
+                                        .resizable()
+                                        .symbolEffect(.wiggle, isActive: true)
+                                        .foregroundStyle(.myPurple)
+                                        .scaledToFit()
+                                        .frame(width: 20)
+                                    
+                                }
+                                .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                        }
+                    }
+                }
+                .animation(.easeIn(duration: 0.3), value: webViewModel.backgroundTabCreatedOverlayTimer?.isValid)
             }
         }
         
@@ -108,7 +179,6 @@ struct WebView: View {
                             .scaledToFill()
                             .frame(width: 225, height: 14, alignment: .center)
                             .clipShape(Capsule())
-                            .padding(.top, 5)
                             .transition(.opacity.combined(with: .scale(scale: 0.95)))
                         
                     }

@@ -9,11 +9,12 @@ import SwiftUI
 
 extension Image {
     @ViewBuilder
-    func sidebarTopButton(hovered: Binding<Bool>, appearance: ColorScheme = .dark, useMacos26Design: Bool, onTap: @escaping () -> Void) -> some View {
+    func sidebarTopButton(hovered: Binding<Bool>, clicked: Binding<Bool>?, appearance: ColorScheme = .dark, useMacos26Design: Bool, onTap: @escaping () -> Void) -> some View {
         if #available(macOS 26, *), useMacos26Design {
-            self.sidebarTopButton26(hovered: hovered, appearance: appearance, onTap: onTap)
+            self.sidebarTopButton26(hovered: hovered, clicked: clicked, appearance: appearance, onTap: onTap)
         } else {
             self
+                .symbolEffect(.wiggle, isActive: clicked?.wrappedValue ?? false)
                 .font(.title2)
                 .foregroundStyle(appearance == .dark ? Color.gray: Color.gray.mix(with: .black, by: 0.4))
                 .padding(3)
@@ -31,13 +32,18 @@ extension Image {
                     }
                 }
                 .onTapGesture {
+                    clicked?.wrappedValue = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        clicked?.wrappedValue = false
+                    }
                     onTap()
                 }
         }
     }
     @available(macOS 26.0, *)
-    func sidebarTopButton26(hovered: Binding<Bool>, appearance: ColorScheme = .dark, onTap: @escaping () -> Void) -> some View {
+    func sidebarTopButton26(hovered: Binding<Bool>, clicked: Binding<Bool>?, appearance: ColorScheme = .dark, onTap: @escaping () -> Void) -> some View {
         self
+            .symbolEffect(.wiggle, isActive: clicked?.wrappedValue ?? false)
             .font(.title2)
             .foregroundStyle(appearance == .dark ? Color.gray: Color.gray.mix(with: .black, by: 0.4))
             .padding(5)
@@ -55,6 +61,10 @@ extension Image {
                 }
             }
             .onTapGesture {
+                clicked?.wrappedValue = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    clicked?.wrappedValue = false
+                }
                 onTap()
             }
     }

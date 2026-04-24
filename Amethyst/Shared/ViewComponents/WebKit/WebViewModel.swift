@@ -23,6 +23,8 @@ class WebViewModel: NSObject, ObservableObject {
     @Published var error: (any Error)? = nil
     @Published var blockDownloadCheckforURL: URL? = nil
     @Published var loadingProgress: Double = 0.0
+    @Published var backgroundTabCreatedOverlayTimer: Timer?
+    @Published var downloadCreatedTimer: Timer?
     @ObservedObject var contentViewModel: ContentViewModel
     @ObservedObject var appViewModel: AppViewModel
     

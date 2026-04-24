@@ -44,7 +44,7 @@ extension SidebarOrientations {
                             .padding(.leading, 5)
                     }
                     Image(systemName: sidebarOrientation.passwordSidebarButton)
-                        .sidebarTopButton(hovered: $isSidebarButtonHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isSidebarButtonHovered, clicked: nil, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             contentViewModel.isPasswordFixed.toggle()
                             contentViewModel.isPasswordShown = false
                         }
@@ -57,7 +57,7 @@ extension SidebarOrientations {
                     SelectionMenu(sortDirectionAcending: $sortData.ascending, sortFilter: $sortData.filter, triggerSort: $sortData.triggerSort)
                     
                     Image(systemName: "plus")
-                        .sidebarTopButton(hovered: $isPlusHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isPlusHovered, clicked: nil, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             prepareCreationSheet()
                         }
                 }
@@ -77,6 +77,9 @@ extension SidebarOrientations {
             @State var isForwardHovered = false
             @State var isReloadHovered = false
             @State var isSidebarButtonHovered = false
+            @State var isBackClicked = false
+            @State var isForwardClicked = false
+            @State var isRefreshClicked = false
             var sidebarOrientation: SidebarOrientations
             
             var body: some View {
@@ -87,25 +90,25 @@ extension SidebarOrientations {
                             .padding(.leading, 5)
                     }
                     Image(systemName: sidebarOrientation.tabSidebarButton)
-                        .sidebarTopButton(hovered: $isSidebarButtonHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isSidebarButtonHovered, clicked: nil, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             contentViewModel.isSidebarFixed.toggle()
                             contentViewModel.isSidebarShown = false
                         }
                     Spacer()
                     Image(systemName: "chevron.left")
-                        .sidebarTopButton(hovered: $isBackHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isBackHovered, clicked: $isBackClicked, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             if let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
                                 tab.webViewModel.webView?.goBack()
                             }
                         }
                     Image(systemName: "chevron.right")
-                        .sidebarTopButton(hovered: $isForwardHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isForwardHovered, clicked: $isForwardClicked, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             if let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
                                 tab.webViewModel.webView?.goForward()
                             }
                         }
                     Image(systemName: "arrow.trianglehead.counterclockwise.rotate.90")
-                        .sidebarTopButton(hovered: $isReloadHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isReloadHovered, clicked: $isRefreshClicked, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             if let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
                                 tab.webViewModel.webView?.reload()
                             }
