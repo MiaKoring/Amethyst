@@ -22,6 +22,7 @@ class WebViewModel: NSObject, ObservableObject {
     @Published var isUsingMicrophone: WKMediaCaptureState = .none
     @Published var error: (any Error)? = nil
     @Published var blockDownloadCheckforURL: URL? = nil
+    @Published var loadingProgress: Double = 0.0
     @ObservedObject var contentViewModel: ContentViewModel
     @ObservedObject var appViewModel: AppViewModel
     
@@ -267,6 +268,13 @@ class WebViewModel: NSObject, ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] value in
                 self?.isUsingMicrophone = value
+            }
+            .store(in: &cancellables)
+        
+        webView?.publisher(for: \.estimatedProgress)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                self?.loadingProgress = value
             }
             .store(in: &cancellables)
     }

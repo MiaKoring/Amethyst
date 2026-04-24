@@ -21,13 +21,15 @@ struct WebView: View {
                     view.allowsHitTesting(false)
                 }
             if let error = webViewModel.error {
-                ErrorView(error: error, webViewModel: webViewModel)
+                ErrorView(error: error)
             }
+            AnimationLayer()
         }
         .if(tabID != contentViewModel.currentTab) { view in
             view
                 .hidden()
         }
+        .environmentObject(webViewModel)
         .opacity(tabID == contentViewModel.currentTab ? 1 : 0)
         .allowsHitTesting(tabID == contentViewModel.currentTab)
         .clipShape(RoundedRectangle(cornerRadius: AmethystApp.windowRound / 2))
@@ -41,7 +43,7 @@ struct WebView: View {
     
     private struct ErrorView: View {
         let error: Error
-        @ObservedObject var webViewModel: WebViewModel
+        @EnvironmentObject var webViewModel: WebViewModel
         var body: some View {
             VStack {
                 HStack {
@@ -78,6 +80,42 @@ struct WebView: View {
                 Spacer()
             }
             .background(.white)
+        }
+    }
+    
+    private struct AnimationLayer: View {
+        var body: some View {
+            ZStack {
+                LoadingProgress()
+            }
+        }
+        
+        private struct LoadingProgress: View {
+            @EnvironmentObject var webViewModel: WebViewModel
+            @Environment(\.colorScheme) var colorScheme
+            var body: some View {
+                VStack {
+                    if webViewModel.isLoading {
+                        ProgressView(value: webViewModel.loadingProgress)
+                            .tint(.myPurple)
+                            .colorScheme(colorScheme == .dark ? .light: .dark)
+                            .progressViewStyle(.linear)
+                            .padding(.horizontal, 2.5)
+                            .background {
+                                Capsule()
+                                    .fill(Color.myPurple)
+                            }
+                            .scaledToFill()
+                            .frame(width: 225, height: 14, alignment: .center)
+                            .clipShape(Capsule())
+                            .padding(.top, 5)
+                            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                        
+                    }
+                    Spacer()
+                }
+                .animation(.easeIn(duration: 0.3), value: webViewModel.isLoading)
+            }
         }
     }
 }
