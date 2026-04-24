@@ -91,6 +91,9 @@ class WebViewModel: NSObject, ObservableObject {
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
         
+        backgroundTabCreatedOverlayTimer?.invalidate()
+        downloadCreatedTimer?.invalidate()
+        
         webView?.removeFromSuperview()
         webView = nil
     }
