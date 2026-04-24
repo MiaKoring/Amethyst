@@ -16,6 +16,7 @@ extension WebViewModel: WKDownloadDelegate {
         print("Download started from navigationAction: \(download.originalRequest?.url?.lastPathComponent ?? "unknown")")
         download.delegate = self // Set the delegate for this specific download's progress
         appViewModel.downloadManager?.startTracking(download: download, withName: navigationAction.request.url?.lastPathComponent)
+        animateDownloadStart()
     }
     
     func webView(
@@ -26,6 +27,16 @@ extension WebViewModel: WKDownloadDelegate {
         print("Download started from navigationResponse: \(download.originalRequest?.url?.lastPathComponent ?? "unknown")")
         download.delegate = self
         appViewModel.downloadManager?.startTracking(download: download, withName: navigationResponse.response.suggestedFilename)
+        
+        animateDownloadStart()
+    }
+    
+    private func animateDownloadStart() {
+        downloadCreatedTimer?.invalidate()
+        downloadCreatedTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] timer in
+            timer.invalidate()
+            self?.downloadCreatedTimer = nil
+        }
     }
     
     func download(

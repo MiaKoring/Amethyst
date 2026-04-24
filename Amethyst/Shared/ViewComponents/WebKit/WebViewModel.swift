@@ -22,6 +22,9 @@ class WebViewModel: NSObject, ObservableObject {
     @Published var isUsingMicrophone: WKMediaCaptureState = .none
     @Published var error: (any Error)? = nil
     @Published var blockDownloadCheckforURL: URL? = nil
+    @Published var loadingProgress: Double = 0.0
+    @Published var backgroundTabCreatedOverlayTimer: Timer?
+    @Published var downloadCreatedTimer: Timer?
     @ObservedObject var contentViewModel: ContentViewModel
     @ObservedObject var appViewModel: AppViewModel
     
@@ -87,6 +90,9 @@ class WebViewModel: NSObject, ObservableObject {
         
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
+        
+        backgroundTabCreatedOverlayTimer?.invalidate()
+        downloadCreatedTimer?.invalidate()
         
         webView?.removeFromSuperview()
         webView = nil
@@ -267,6 +273,13 @@ class WebViewModel: NSObject, ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] value in
                 self?.isUsingMicrophone = value
+            }
+            .store(in: &cancellables)
+        
+        webView?.publisher(for: \.estimatedProgress)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                self?.loadingProgress = value
             }
             .store(in: &cancellables)
     }

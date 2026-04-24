@@ -133,7 +133,7 @@ extension Keybind {
         case .nextTab:
             Shortcut(key: "s", modifier: [.command, .shift])
         case .closeCurrentTab:
-            Shortcut(key: "c", modifier: .option)
+            Shortcut(key: "c", modifier: [.command, .option])
         case .showHistory:
             Shortcut(key: "y", modifier: .command)
         case .zoomIn:

@@ -10,8 +10,9 @@ struct ATabView: View {
             LazyVStack {
                 ForEach(contentViewModel.tabs) { tab in
                     TabButton(id: tab.id, tabVM: tab.webViewModel)
-                        .listRowSeparator(.hidden)
+                        .transition(.opacity)
                 }
+                .animation(.easeInOut(duration: 0.3), value: contentViewModel.tabs)
             }
             .padding(15)
         }

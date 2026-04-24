@@ -27,6 +27,13 @@ class AppViewModel: NSObject, ObservableObject, NSWindowDelegate {
     var createNewWindow: Bool = false
     var runsInAppStoreSandbox: Bool = false
     
+    let standardFileImage: Image
+    
+    override init() {
+        standardFileImage = Image(nsImage: NSWorkspace.shared.icon(for: .data))
+        super.init()
+    }
+    
     func windowDidBecomeKey(_ notification: Notification) {
         if let window = notification.object as? NSWindow {
             if let id = window.identifier?.rawValue {
@@ -40,4 +47,6 @@ class AppViewModel: NSObject, ObservableObject, NSWindowDelegate {
         
         return appURL.absoluteString.contains("Amethyst%20Browser.app")
     }
+    
+    
 }

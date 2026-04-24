@@ -44,7 +44,7 @@ extension SidebarOrientations {
                             .padding(.leading, 5)
                     }
                     Image(systemName: sidebarOrientation.passwordSidebarButton)
-                        .sidebarTopButton(hovered: $isSidebarButtonHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isSidebarButtonHovered, clickAnimated: false, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             contentViewModel.isPasswordFixed.toggle()
                             contentViewModel.isPasswordShown = false
                         }
@@ -57,7 +57,7 @@ extension SidebarOrientations {
                     SelectionMenu(sortDirectionAcending: $sortData.ascending, sortFilter: $sortData.filter, triggerSort: $sortData.triggerSort)
                     
                     Image(systemName: "plus")
-                        .sidebarTopButton(hovered: $isPlusHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isPlusHovered, clickAnimated: false, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             prepareCreationSheet()
                         }
                 }
@@ -73,10 +73,10 @@ extension SidebarOrientations {
             @Environment(\.colorScheme) var appearance
             @Environment(ContentViewModel.self) var contentViewModel
             @Environment(AppViewModel.self) var appViewModel
-            @State var isBackHovered = false
-            @State var isForwardHovered = false
-            @State var isReloadHovered = false
-            @State var isSidebarButtonHovered = false
+        @State private var isBackHovered = false
+            @State private var isForwardHovered = false
+            @State private var isReloadHovered = false
+            @State private var isSidebarButtonHovered = false
             var sidebarOrientation: SidebarOrientations
             
             var body: some View {
@@ -87,7 +87,7 @@ extension SidebarOrientations {
                             .padding(.leading, 5)
                     }
                     Image(systemName: sidebarOrientation.tabSidebarButton)
-                        .sidebarTopButton(hovered: $isSidebarButtonHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isSidebarButtonHovered, clickAnimated: false, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             contentViewModel.isSidebarFixed.toggle()
                             contentViewModel.isSidebarShown = false
                         }
@@ -99,7 +99,7 @@ extension SidebarOrientations {
                             }
                         }
                     Image(systemName: "chevron.right")
-                        .sidebarTopButton(hovered: $isForwardHovered, appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
+                        .sidebarTopButton(hovered: $isForwardHovered,  appearance: appearance, useMacos26Design: appViewModel.useMacOS26Design) {
                             if let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
                                 tab.webViewModel.webView?.goForward()
                             }
