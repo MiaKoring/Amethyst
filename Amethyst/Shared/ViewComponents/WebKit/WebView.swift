@@ -9,9 +9,9 @@ import SwiftUI
 struct WebView: View {
     let tabID: UUID
     @ObservedObject var webViewModel: WebViewModel
-    @Environment(ContentViewModel.self) var contentViewModel
-    @Environment(AppViewModel.self) var appViewModel
-    @FocusState var isFocused: Bool
+    @Environment(ContentViewModel.self) private var contentViewModel
+    @Environment(AppViewModel.self) private var appViewModel
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         ZStack {
@@ -34,10 +34,13 @@ struct WebView: View {
         .allowsHitTesting(tabID == contentViewModel.currentTab)
         .clipShape(RoundedRectangle(cornerRadius: AmethystApp.windowRound / 2))
         .padding(appViewModel.useMacOS26Design ? 8: 10)
-        .onChange(of: contentViewModel.currentTab) {
-            if contentViewModel.currentTab == tabID {
-                isFocused = true
-            }
+        .onChange(of: contentViewModel.currentTab) { focusIfActive() }
+        .onAppear() { focusIfActive() }
+    }
+    
+    private func focusIfActive(){
+        if contentViewModel.currentTab == tabID {
+            isFocused = true
         }
     }
     
@@ -94,7 +97,7 @@ struct WebView: View {
         }
         
         private struct BackgroundTabCreatedInfo: View {
-            @EnvironmentObject var webViewModel: WebViewModel
+            @EnvironmentObject private var webViewModel: WebViewModel
             
             var body: some View {
                 VStack {
@@ -130,7 +133,7 @@ struct WebView: View {
         }
         
         private struct DownloadStartedInfo: View {
-            @EnvironmentObject var webViewModel: WebViewModel
+            @EnvironmentObject private var webViewModel: WebViewModel
             @Environment(AppViewModel.self) var appViewModel: AppViewModel
             
             var body: some View {
@@ -139,7 +142,7 @@ struct WebView: View {
                     if webViewModel.downloadCreatedTimer?.isValid == true {
                         HStack {
                             Spacer()
-                            Image(nsImage: NSWorkspace.shared.icon(for: .data))
+                            appViewModel.standardFileImage
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 50)
@@ -157,13 +160,13 @@ struct WebView: View {
                         }
                     }
                 }
-                .animation(.easeIn(duration: 0.3), value: webViewModel.backgroundTabCreatedOverlayTimer?.isValid)
+                .animation(.easeIn(duration: 0.3), value: webViewModel.downloadCreatedTimer?.isValid)
             }
         }
         
         private struct LoadingProgress: View {
-            @EnvironmentObject var webViewModel: WebViewModel
-            @Environment(\.colorScheme) var colorScheme
+            @EnvironmentObject private var webViewModel: WebViewModel
+            @Environment(\.colorScheme) private var colorScheme
             var body: some View {
                 VStack {
                     if webViewModel.isLoading {

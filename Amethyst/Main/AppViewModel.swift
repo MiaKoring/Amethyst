@@ -27,7 +27,7 @@ class AppViewModel: NSObject, ObservableObject, NSWindowDelegate {
     var createNewWindow: Bool = false
     var runsInAppStoreSandbox: Bool = false
     
-    var standardFileImage: Image
+    let standardFileImage: Image
     
     override init() {
         standardFileImage = Image(nsImage: NSWorkspace.shared.icon(for: .data))

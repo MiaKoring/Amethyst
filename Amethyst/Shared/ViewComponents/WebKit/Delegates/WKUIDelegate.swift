@@ -16,6 +16,8 @@ extension WebViewModel: WKUIDelegate {
                     let newWebViewModel = WebViewModel(config: configuration, contentViewModel: contentViewModel, appViewModel: appViewModel)
                     let newTab = ATab(webViewModel: newWebViewModel)
                     contentViewModel.tabs.append(newTab)
+                    
+                    backgroundTabCreatedOverlayTimer?.invalidate()
                     backgroundTabCreatedOverlayTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] timer in
                         timer.invalidate()
                         self?.backgroundTabCreatedOverlayTimer = nil
