@@ -12,7 +12,7 @@ private struct ClickableSidebarIconModifier: ViewModifier {
     let clickAnimated: Bool
     let onTap: () -> Void
     
-    @State var clicked = false
+    @State private var clicked = false
     @State private var pendingReset: DispatchWorkItem?
     
     func body(content: Content) -> some View {
