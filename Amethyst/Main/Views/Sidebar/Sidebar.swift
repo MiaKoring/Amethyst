@@ -42,7 +42,7 @@ struct Sidebar: View {
                         SetDefaultBrowserButton()
                     }
                 }
-                FeedbackButton()
+                MenuButton()
                 .placeBottomLeading()
             }
         }
@@ -61,6 +61,67 @@ struct Sidebar: View {
                         .foregroundStyle(appearance == .dark ? Color.gray: Color.gray.mix(with: .black, by: 0.4))
                 }
                 .buttonStyle(.plain)
+            }
+        }
+    }
+    
+    private struct MenuButton: View {
+        @State var playAnimation: Bool = false
+        @State var isHovered = false
+        
+        @Environment(AppViewModel.self) var appViewModel
+        @Environment(ContentViewModel.self) var contentViewModel
+        @Environment(\.openSettings) private var openSettings
+        
+        var actions: [RadialMenuAction] {
+            [
+                RadialMenuAction(label: {
+                    SidebarBottomButtonLabel(imageName: "bubble.left.and.bubble.right")
+                        .help("Feedback")
+                }) {
+                    let tab = ATab(webViewModel: .init(contentViewModel: contentViewModel, appViewModel: appViewModel))
+                    tab.webViewModel.load(urlString: "https://amethyst.featurebase.app")
+                    contentViewModel.tabs.append(tab)
+                    contentViewModel.currentTab = tab.id
+                },
+                RadialMenuAction(label: {
+                    SidebarBottomButtonLabel(imageName: "gear")
+                        .help("Settings")
+                }) {
+                    openSettings()
+                },
+                RadialMenuAction(label: {
+                    SidebarBottomButtonLabel(imageName: "clock")
+                        .help("Search History")
+                }) {
+                    Keybind.showHistory.showHistory(appViewModel)
+                }
+            ]
+        }
+        
+        var body: some View {
+            RadialMenu(
+                actions: actions,
+                radius: 60,
+                startAngle: -90,
+                endAngle: 0
+            ) { isExpanded in
+                Image(systemName: isExpanded ? "x.circle": "circle.circle")
+                    .sizeRef { Image(systemName: "arrow.down.app").font(.title) }
+                    .font(.title)
+                    .foregroundStyle(.gray.mix(with: .mainColorMix, by: 0.3))
+                    .symbolEffect(.wiggle.down.byLayer, value: playAnimation)
+                    .padding(5)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .contentShape(RoundedRectangle(cornerRadius: 10))
+                    .padding(-2)
+                    .onHover { isHovered in
+                        if isHovered {
+                            playAnimation.toggle()
+                        }
+                        self.isHovered = isHovered
+                    }
+                    .help("Feedback, Settings and more")
             }
         }
     }
