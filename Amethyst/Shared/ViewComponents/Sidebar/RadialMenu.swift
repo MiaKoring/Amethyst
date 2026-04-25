@@ -1,7 +1,6 @@
 import SwiftUI
 
-struct RadialMenuAction: Identifiable {
-    let id = UUID()
+struct RadialMenuAction {
     let label: AnyView
     let handler: () -> Void
     
@@ -24,7 +23,7 @@ struct RadialMenu<Label: View>: View {
     
     var body: some View {
         ZStack {
-            ForEach(Array(actions.enumerated()), id: \.element.id) { index, action in
+            ForEach(Array(actions.enumerated()), id: \.offset) { index, action in
                 Button { action.handler() } label: {
                     action.label
                 }
@@ -32,6 +31,7 @@ struct RadialMenu<Label: View>: View {
                 .offset(offset(for: index))
                 .opacity(isExpanded ? 1 : 0)
                 .scaleEffect(isExpanded ? 1 : 0.4)
+                .allowsHitTesting(isExpanded)
                 .animation(
                     .spring(response: 0.35, dampingFraction: 0.7)
                     .delay(Double(index) * 0.04),
