@@ -1,9 +1,3 @@
-//
-//  KeybindFunctions.swift
-//  Amethyst Project
-//
-//  Created by Mia Koring on 11.06.25.
-//
 import SwiftUI
 
 extension Keybind {
