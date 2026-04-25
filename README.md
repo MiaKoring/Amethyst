@@ -10,11 +10,12 @@ Join the Early Access or Waitlist at [Amethyst's Website](https://amethystbrowse
 * local search engine (meilisearch) for relevant search suggestions 
 * persistent tabs across sessions, including most recent navigation
 * very fast compared to e.g. Arc
-* hardware security key support (coming soon)
+* hardware security key support
 * UI customization (planned)
+* commands to reach websites fast
+* locally resolved, fast, customizable bang queries
 * Quick access "hotbar" for frequently used sites (planned)
 * integrated password manger (planned)
-* Ollama integration for summarys and chats (planned)
 
 ### Tech-Stack
 * Swift
