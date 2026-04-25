@@ -106,7 +106,7 @@ struct Sidebar: View {
                 startAngle: -90,
                 endAngle: 0
             ) { isExpanded in
-                Image(systemName: isExpanded ? "x.circle": "circle.circle")
+                Image(systemName: isExpanded ? "record.circle": "circle.circle")
                     .sizeRef { Image(systemName: "arrow.down.app").font(.title) }
                     .font(.title)
                     .foregroundStyle(.gray.mix(with: .mainColorMix, by: 0.3))
