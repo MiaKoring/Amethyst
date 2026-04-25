@@ -48,4 +48,4 @@ Custom builds, if you and/or your business have special needs are also possible.
 
 ### Contributing
 
-We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute.
+We welcome bug reports and feature requests! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute.
