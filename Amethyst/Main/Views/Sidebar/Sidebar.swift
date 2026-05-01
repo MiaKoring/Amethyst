@@ -35,16 +35,14 @@ struct Sidebar: View {
                         DownloadOverview()
                     }
             }
-            ZStack {
-                if(!AppViewModel.isDefaultBrowser()) {
-                    VStack {
-                        Spacer()
-                        SetDefaultBrowserButton()
-                    }
+            if(!AppViewModel.isDefaultBrowser()) {
+                VStack {
+                    Spacer()
+                    SetDefaultBrowserButton()
                 }
-                MenuButton()
-                .placeBottomLeading()
             }
+            MenuButton()
+            .placeBottomLeading()
         }
         .decideSidebarStyling(isFixed: contentViewModel.isSidebarFixed, appearance: appearance, useMacos26Desing: appViewModel.useMacOS26Design)
     }
@@ -129,6 +127,8 @@ struct Sidebar: View {
     private struct NewTabButton: View {
         @Environment(ContentViewModel.self) var contentViewModel
         @State var isNewTabHovered: Bool = false
+        @Environment(\.colorScheme) var appearance
+        
         var body: some View {
             Button { contentViewModel.triggerNewTab.toggle() } label: {
                 HStack {
@@ -140,7 +140,11 @@ struct Sidebar: View {
                 .padding(10)
                 .background {
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(true: .mainColorMix.opacity(0.1), false: .ultraThinMaterial, with: isNewTabHovered)
+                        .fill(
+                            true: .mainColorMix.opacity(0.1),
+                            false: .black.opacity(appearance == .dark ? 0.1: 0.05),
+                            with: isNewTabHovered
+                        )
                 }
             }
             .buttonStyle(.plain)

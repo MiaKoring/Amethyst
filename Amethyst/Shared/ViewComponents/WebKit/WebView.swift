@@ -39,9 +39,7 @@ struct WebView: View {
     }
     
     private func focusIfActive(){
-        if contentViewModel.currentTab == tabID {
-            isFocused = true
-        }
+        isFocused = (contentViewModel.currentTab == tabID)
     }
     
     private struct ErrorView: View {

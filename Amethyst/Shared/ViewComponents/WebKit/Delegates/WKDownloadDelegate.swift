@@ -32,10 +32,12 @@ extension WebViewModel: WKDownloadDelegate {
     }
     
     private func animateDownloadStart() {
-        downloadCreatedTimer?.invalidate()
-        downloadCreatedTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] timer in
-            timer.invalidate()
-            self?.downloadCreatedTimer = nil
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.downloadCreatedTimer?.invalidate()
+            self.downloadCreatedTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
+                self?.downloadCreatedTimer = nil
+            }
         }
     }
     

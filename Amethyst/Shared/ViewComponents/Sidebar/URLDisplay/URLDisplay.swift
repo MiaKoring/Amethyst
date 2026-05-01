@@ -1,9 +1,3 @@
-//
-//  URLDisplay.swift
-//  Amethyst
-//
-//  Created by Mia Koring on 28.11.24.
-//
 import SwiftUI
 
 extension URLDisplay: View {
@@ -29,8 +23,7 @@ extension URLDisplay: View {
         .padding(10)
         .background() {
             RoundedRectangle(cornerRadius: 12)
-                .fill(.thinMaterial)
-                .background(.mainColorMix.opacity(appearance == .dark ? 0.2: 0.05))
+                .fill(.black.opacity(appearance == .dark ? 0.1: 0.05))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .onTapGesture {
                     if !showTextField {
