@@ -108,7 +108,7 @@ struct Sidebar: View {
                     .sizeRef { Image(systemName: "arrow.down.app").font(.title) }
                     .font(.title)
                     .foregroundStyle(.gray.mix(with: .mainColorMix, by: 0.3))
-                    .symbolEffect(.wiggle.down.byLayer, value: playAnimation)
+                    .symbolEffect(.bounce, value: playAnimation)
                     .padding(5)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .contentShape(RoundedRectangle(cornerRadius: 10))
