@@ -42,8 +42,12 @@ struct ShortDownloadOverviewItem: View {
         }
         .onHover { hovering in isHovered = hovering }
         .onTapGesture { if let url = item.url { NSWorkspace.shared.open(url) } }
-        .if(isHovered && appearance == .dark) { view in view.background(.regularMaterial) }
-        .if(isHovered && appearance == .light) { view in view.background(.white.mix(with: .gray, by: 0.05)) }
+        .if(isHovered && appearance == .dark) { view in
+            view.background(.myPurple.mix(with: .white, by: 0.25))
+        }
+        .if(isHovered && appearance == .light) { view in
+            view.background(.white.mix(with: .gray, by: 0.05))
+        }
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .contextMenu {
             if item.info?.progress == nil {
