@@ -3,7 +3,7 @@ import TipKit
 
 @Observable
 final class BangManager: ShortcutFeatureManager {
-    static var shared = BangManager()
+    static let shared = BangManager()
     
     private init() {}
     
@@ -71,6 +71,7 @@ final class BangManager: ShortcutFeatureManager {
     
     var tip: any Tip = BangTip()
 }
+@MainActor
 protocol ShortcutFeatureManager: Observable {
     func fetch() -> Void
     func set(_ destination: String, for key: String) -> Void

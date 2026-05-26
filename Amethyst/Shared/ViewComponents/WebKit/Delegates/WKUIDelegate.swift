@@ -20,7 +20,9 @@ extension WebViewModel: WKUIDelegate {
                     backgroundTabCreatedOverlayTimer?.invalidate()
                     backgroundTabCreatedOverlayTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] timer in
                         timer.invalidate()
-                        self?.backgroundTabCreatedOverlayTimer = nil
+                        Task { @MainActor in
+                            self?.backgroundTabCreatedOverlayTimer = nil
+                        }
                     }
                 return newWebViewModel.webView
             case .openInNewWindow:

@@ -8,9 +8,10 @@ import SwiftUI
 import SwiftData
 import WebKit
 import Combine
-import MeiliSearch
+@preconcurrency import MeiliSearch
 import AuthenticationServices
 
+@MainActor
 class WebViewModel: NSObject, ObservableObject {
     private static var accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
     @Published var canGoBack: Bool = false
@@ -78,27 +79,9 @@ class WebViewModel: NSObject, ObservableObject {
         injectAllJS()
     }
     
-    deinit {
+    func cleanup() async {
         webView?.stopLoading()
         
-        let userContentController = webView?.configuration.userContentController
-        userContentController?.removeAllUserScripts()
-        userContentController?.removeScriptMessageHandler(forName: "webauthn")
-        
-        webView?.uiDelegate = nil
-        webView?.navigationDelegate = nil
-        
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
-        
-        backgroundTabCreatedOverlayTimer?.invalidate()
-        downloadCreatedTimer?.invalidate()
-        
-        webView?.removeFromSuperview()
-        webView = nil
-    }
-    
-    func cleanup() async {
         // 1. Perform all async cleanup operations first.
         // We can safely await them here because we are in an async context
         // and the webView is guaranteed to still exist.
@@ -109,7 +92,6 @@ class WebViewModel: NSObject, ObservableObject {
 
         // 2. Perform synchronous cleanup.
         // This part is similar to the deinit logic.
-        webView?.stopLoading()
         webView?.load(URLRequest(url: URL(string: "about:blank")!))
 
         // 3. Break retain cycles. This is critical.

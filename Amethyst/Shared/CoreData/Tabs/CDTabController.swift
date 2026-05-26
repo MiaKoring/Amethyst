@@ -9,12 +9,13 @@ import Foundation
 import CoreData
 import OSLog
 
+@MainActor
 class CDTabController {
-    public static var shared = CDTabController(name: "Tabs")
-    var container: NSPersistentContainer
-    private static var logger = Logger(subsystem: AmethystApp.subSystem, category: "CDTabController")
+    public static nonisolated let shared = CDTabController(name: "Tabs")
+    nonisolated let container: NSPersistentContainer
+    private static nonisolated let logger = Logger(subsystem: AmethystApp.subSystem, category: "CDTabController")
     
-    private init(name: String) {
+    private nonisolated init(name: String) {
         container = NSPersistentContainer(name: name)
         container.loadPersistentStores { _, error in
             if let error {
@@ -41,12 +42,11 @@ class CDTabController {
             
             do {
                 let result = try context.execute(batchDeleteRequest) as? NSBatchDeleteResult
-                
                 if let objectIDs = result?.result as? [NSManagedObjectID] {
                     let changes = [NSDeletedObjectsKey: objectIDs]
                     NSManagedObjectContext.mergeChanges(
                         fromRemoteContextSave: changes,
-                        into: [self.container.viewContext]
+                        into: [context]
                     )
                 }
             } catch {
@@ -109,7 +109,7 @@ class CDTabController {
                     let changes = [NSDeletedObjectsKey: objectIDs]
                     NSManagedObjectContext.mergeChanges(
                         fromRemoteContextSave: changes,
-                        into: [self.container.viewContext]
+                        into: [context]
                     )
                 }
             } catch {

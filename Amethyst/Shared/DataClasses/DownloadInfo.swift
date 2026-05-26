@@ -4,8 +4,9 @@ import Foundation
 import WebKit
 import Combine
 
+@MainActor
 @Observable
-class DownloadInfo: Identifiable, Hashable {
+class DownloadInfo: @MainActor Identifiable, @MainActor Hashable {
     // Use the download object for identity and hashing
     var id: WKDownload { download }
 
@@ -41,7 +42,7 @@ class DownloadInfo: Identifiable, Hashable {
         progressObservation = download.progress.observe(\.fractionCompleted, options: [.initial, .new]) { [weak self] progress, _ in
             // This closure is called whenever the progress changes.
             // We must update our properties on the main thread for UI safety.
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self?.updateProgress(progress)
             }
         }

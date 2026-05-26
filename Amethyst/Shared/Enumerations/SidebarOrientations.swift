@@ -5,6 +5,8 @@
 //  Created by Mia Koring on 04.06.25.
 //
 import SwiftUI
+
+@MainActor
 enum SidebarOrientations: CaseIterable {
     case tabsLeading, tabsTrailing
 }

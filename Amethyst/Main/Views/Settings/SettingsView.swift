@@ -11,7 +11,7 @@ import TipKit
 
 struct SettingsView: View {
     @Environment(AppViewModel.self) var appViewModel
-    @StateObject var fileDownloader = SetupStep.DownloadIndexView.FileDownloader()
+    @StateObject private var fileDownloader = SetupStep.DownloadIndexView.FileDownloader()
     
     var body: some View {
         ZStack {
@@ -234,6 +234,7 @@ struct SettingsView: View {
             }
         }
         
+        @MainActor
         private enum ProductivityView: String, CaseIterable {
             case bangs = "Bang Queries"
             case commands = "Commands"

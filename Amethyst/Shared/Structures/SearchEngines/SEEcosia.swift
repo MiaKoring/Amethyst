@@ -7,7 +7,7 @@
 
 import Foundation
 struct SEEcosia: SearchEngineAdaptor {
-    static var name: String = "Ecosia"
+    static let name: String = "Ecosia"
     
     static func quickResults(query: String) async -> [String] {
         guard let url = URL(string: "https://ac.ecosia.org/?limit=8&q=\(query.replacingOccurrences(of: " ", with: "+"))&type=json") else { return [] }

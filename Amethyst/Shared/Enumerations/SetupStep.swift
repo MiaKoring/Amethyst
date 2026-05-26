@@ -7,9 +7,11 @@
 
 import SwiftUI
 import CryptoKit
-import MeiliSearch
+@preconcurrency import MeiliSearch
 import OSLog
+import Synchronization
 
+@MainActor
 enum SetupStep: Int, CaseIterable {
     case welcome
     case searchEngine
@@ -20,7 +22,7 @@ enum SetupStep: Int, CaseIterable {
     case checkMeiliRunning
 }
 
-extension SetupStep: Identifiable {
+extension SetupStep: @MainActor Identifiable {
     var id: Int {
         self.rawValue
     }
@@ -105,26 +107,26 @@ extension SetupStep {
     }
     
     struct DownloadIndexView: View {
-        @EnvironmentObject var downloader: FileDownloader
+        @EnvironmentObject private var downloader: FileDownloader
         var body: some View {
             VStack {
                 Text("Download Amethyst Index")
                     .font(.title)
                 VStack {
-                    if downloader.state == .idle {
+                    if downloader.state.withLock({ state in state }) == .idle {
                         Text("For local search suggestions we need a small helper app called Amethyst Index. \n\nWe use the Meilisearch Open-Source project to provide you with the best possible Search Suggestions while keeping your privacy.\n")
                             .font(.system(size: 18))
                         Button("Autoconfigure & Download Amethyst Index") {
                             autoconfig()
                             downloader.chooseLocationAndStartDownload(from: URL(string: Bundle.main.infoDictionary?["IndexURL"] as? String ?? "")!)
                         }
-                        .disabled(downloader.state == .downloading)
+                        .disabled(downloader.state.withLock { state in state } == .downloading)
                     }
-                    if downloader.state == .downloading {
+                    if downloader.state.withLock({ state in state }) == .downloading {
                         Text("Downloading Amethyst Index")
-                        ProgressView(value: downloader.progress)
+                        ProgressView(value: downloader.progress.withLock { progress in progress })
                     }
-                    if downloader.state == .finished {
+                    if downloader.state.withLock({ state in state }) == .finished {
                         Image("IndexKeychainPermission")
                             .resizable()
                             .scaledToFit()
@@ -139,10 +141,10 @@ extension SetupStep {
                         """)
                         .font(.system(size: 14))
                     }
-                    if downloader.state == .failed {
+                    if downloader.state.withLock({ state in state }) == .failed {
                         Text("An error occured, please try again later")
                     }
-                    if downloader.state != .downloading && downloader.state != .failed {
+                    if downloader.state.withLock({ state in state }) != .downloading && downloader.state.withLock({ state in state }) != .failed {
                         Button("Autoconfigure") { autoconfig() }
                     }
                 }
@@ -160,7 +162,7 @@ extension SetupStep {
             }
         }
         
-        class FileDownloader: NSObject, ObservableObject, URLSessionDownloadDelegate {
+        final class FileDownloader: NSObject, ObservableObject, URLSessionDownloadDelegate {
             static let logger = Logger(subsystem: AmethystApp.subSystem, category: "IndexFileDownloader")
             enum DownloadState: Int {
                 case idle
@@ -168,21 +170,23 @@ extension SetupStep {
                 case finished
                 case failed
             }
-
-            // Published properties will trigger UI updates in any listening SwiftUI view.
-            @Published var progress: Double = 0.0
-            @Published var state: DownloadState = .idle
-
-            private var downloadTask: URLSessionDownloadTask?
-            private var destinationURL: URL?
             
-            private lazy var urlSession: URLSession = {
+            // Published properties will trigger UI updates in any listening SwiftUI view.
+            let progress = Mutex(0.0)
+            let state = Mutex(DownloadState.idle)
+
+            private let downloadTask: Mutex<URLSessionDownloadTask?> = Mutex(nil)
+            private let destinationURL: Mutex<URL?> = Mutex(nil)
+            
+            private var urlSession: URLSession {
                 // We need a delegate to receive progress updates, so we configure the session with self as the delegate.
                 let configuration = URLSessionConfiguration.default
                 return URLSession(configuration: configuration, delegate: self, delegateQueue: .main)
-            }()
+            }
             
+            @MainActor
             func chooseLocationAndStartDownload(from url: URL) {
+                defer { objectWillChange.send() }
                 let savePanel = NSSavePanel()
                 savePanel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
                 savePanel.canCreateDirectories = true
@@ -192,24 +196,28 @@ extension SetupStep {
                 savePanel.begin { [weak self] (result) in
                     guard let self = self, result == .OK, let destination = savePanel.url else {
                         // error or user cancellation
-                        self?.state = .idle
+                        self?.state.withLock { state in state = .idle }
                         return
                     }
                     
                     // Save user selected url
-                    self.destinationURL = destination
+                    self.destinationURL.withLock{ url in url = destination }
                     self.startDownload(from: url)
                 }
             }
 
             // Starts the download process.
             private func startDownload(from url: URL) {
-                self.progress = 0.0
-                self.state = .downloading
+                self.progress.withLock { progress in progress = 0.0 }
+                self.state.withLock { state in state = .downloading }
                 
                 let urlRequest = URLRequest(url: url)
-                downloadTask = urlSession.downloadTask(with: urlRequest)
-                downloadTask?.resume()
+                downloadTask.withLock { task in
+                    task = urlSession.downloadTask(with: urlRequest)
+                    task?.resume()
+                }
+                
+                objectWillChange.send()
             }
 
             // MARK: - URLSessionDownloadDelegate Methods
@@ -222,16 +230,18 @@ extension SetupStep {
                 totalBytesWritten: Int64,
                 totalBytesExpectedToWrite: Int64
             ) {
-                // We calculate the progress and update our @Published property.
-                // This will cause the ProgressView in SwiftUI to update.
-                self.progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
+                let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
+                self.progress.withLock { prog in prog = progress }
+                objectWillChange.send()
             }
 
             // This delegate method is called when the download successfully completes.
             func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-                guard let destinationURL = self.destinationURL else {
+                defer { objectWillChange.send() }
+                
+                guard let destinationURL = self.destinationURL.withLock({ url in url }) else {
                     Self.logger.error("Error: Destination URL was not set.")
-                    self.state = .failed
+                    self.state.withLock { state in state = .failed }
                     return
                 }
                 
@@ -242,10 +252,10 @@ extension SetupStep {
                     // move tmp to user selected destination
                     try fileManager.moveItem(at: location, to: destinationURL)
                     Self.logger.info("File moved to: \(destinationURL.path)")
-                    self.state = .finished
+                    self.state.withLock { state in state = .finished }
                 } catch {
                     Self.logger.error("Download move failed with error: \(error.localizedDescription)")
-                    self.state = .failed
+                    self.state.withLock { state in state = .failed }
                 }
             }
 
@@ -258,7 +268,8 @@ extension SetupStep {
                 // If there's an error, we update our state to reflect that.
                 if let error = error {
                     Self.logger.error("Download failed with error: \(error.localizedDescription)")
-                    self.state = .failed
+                    self.state.withLock { state in state = .failed }
+                    objectWillChange.send()
                 }
             }
         }

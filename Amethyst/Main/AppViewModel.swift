@@ -7,7 +7,7 @@
 import SwiftData
 import SwiftUI
 import WebKit
-import MeiliSearch
+@preconcurrency import MeiliSearch
 
 
 @Observable

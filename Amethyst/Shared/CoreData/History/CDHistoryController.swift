@@ -9,12 +9,13 @@ import Foundation
 import CoreData
 import OSLog
 
+@MainActor
 class CDHistoryController {
-    public static var shared = CDHistoryController(name: "History")
-    var container: NSPersistentContainer
-    private static var logger = Logger(subsystem: AmethystApp.subSystem, category: "CDHistroryController")
+    public static nonisolated let shared = CDHistoryController(name: "History")
+    let container: NSPersistentContainer
+    private static nonisolated let logger = Logger(subsystem: AmethystApp.subSystem, category: "CDHistoryController")
     
-    private init(name: String) {
+    private nonisolated init(name: String) {
         container = NSPersistentContainer(name: name)
         container.loadPersistentStores { _, error in
             if let error {
@@ -53,7 +54,7 @@ class CDHistoryController {
                     let changes = [NSDeletedObjectsKey: objectIDs]
                     NSManagedObjectContext.mergeChanges(
                         fromRemoteContextSave: changes,
-                        into: [self.container.viewContext]
+                        into: [context]
                     )
                 }
             } catch {

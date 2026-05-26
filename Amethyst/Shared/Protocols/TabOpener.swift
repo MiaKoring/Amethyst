@@ -9,6 +9,7 @@ import SwiftUI
 import WebKit
 import OSLog
 
+@MainActor
 protocol TabOpener {
     var contentViewModel: ContentViewModel { get }
     var appViewModel: AppViewModel { get }
@@ -51,7 +52,7 @@ extension TabOpener {
                 contentViewModel: contentViewModel,
                 appViewModel: appViewModel
             )
-            // Important: Load the URL *after* creating the view model.
+            
             webViewModel.load(url: url)
             
             let newTab = ATab(webViewModel: webViewModel)
@@ -73,6 +74,7 @@ fileprivate enum InputType {
     case searchQuery(String)
 }
 
+@MainActor
 fileprivate struct InputParser {
     static func parse(_ text: String) -> InputType {
         // First, check for special commands

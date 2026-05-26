@@ -36,7 +36,9 @@ extension WebViewModel: WKDownloadDelegate {
             guard let self else { return }
             self.downloadCreatedTimer?.invalidate()
             self.downloadCreatedTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
-                self?.downloadCreatedTimer = nil
+                Task { @MainActor in
+                    self?.downloadCreatedTimer = nil
+                }
             }
         }
     }
@@ -52,19 +54,6 @@ extension WebViewModel: WKDownloadDelegate {
         }
         print("no destination found")
         return nil
-    }
-    
-    func download(_ download: WKDownload, didUpdateProgress progress: Double) {
-        print("updated progress")
-        let totalBytes = download.progress.totalUnitCount
-        let downloadedBytes = download.progress.completedUnitCount
-        
-        appViewModel.downloadManager?.updateProgress(
-            for: download,
-            progress: progress,
-            downloadedBytes: downloadedBytes,
-            totalBytes: totalBytes
-        )
     }
     
     func download(_ download: WKDownload, didFinishDownloadingTo location: URL) {

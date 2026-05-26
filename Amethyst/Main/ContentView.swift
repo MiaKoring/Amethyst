@@ -9,7 +9,6 @@ import SwiftData
 import SwiftUI
 import WebKit
 
-
 extension ContentView: View, TabOpener {
     var body: some View {
         @Bindable var appViewModel = appViewModel

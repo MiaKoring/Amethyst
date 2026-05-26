@@ -39,6 +39,7 @@ private struct ClickableSidebarIconModifier: ViewModifier {
 }
 
 extension Image {
+    @MainActor
     @ViewBuilder
     func sidebarTopButton(hovered: Binding<Bool>, clickAnimated: Bool = true, appearance: ColorScheme = .dark, useMacos26Design: Bool, onTap: @escaping () -> Void) -> some View {
         if #available(macOS 26, *), useMacos26Design {
@@ -64,6 +65,7 @@ extension Image {
         }
     }
     
+    @MainActor
     @available(macOS 26.0, *)
     func sidebarTopButton26(hovered: Binding<Bool>, clickAnimated: Bool = true, appearance: ColorScheme = .dark, onTap: @escaping () -> Void) -> some View {
         self

@@ -7,6 +7,7 @@
 import Foundation
 import CoreData
 
+@MainActor
 @objc(SavedTab)
 public class SavedTab: NSManagedObject {
     convenience init() {

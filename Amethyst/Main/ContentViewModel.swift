@@ -10,8 +10,9 @@ import WebKit
 import AuthenticationServices
 import OSLog
 
+@MainActor
 @Observable
-class ContentViewModel: NSObject, ObservableObject, Identifiable {
+class ContentViewModel: NSObject, ObservableObject, @MainActor Identifiable {
     var id: String
     var creationDate = Date()
     var triggerNewTab: Bool = false
@@ -73,6 +74,7 @@ class ContentViewModel: NSObject, ObservableObject, Identifiable {
     }
 }
 
+@MainActor
 struct ContentView {
     static let logger = Logger(subsystem: AmethystApp.subSystem, category: "ContentViewModel")
     
@@ -105,9 +107,14 @@ struct ContentView {
             object: nil,
             queue: .main
         ) { notification in
-            if contentViewModel.blockNotification { // to block reinserting the window on close
-                contentViewModel.blockNotification = false
-                return
+            Task {
+                await
+                MainActor.run {
+                    if contentViewModel.blockNotification { // to block reinserting the window on close
+                        contentViewModel.blockNotification = false
+                        return
+                    }
+                }
             }
         }
         

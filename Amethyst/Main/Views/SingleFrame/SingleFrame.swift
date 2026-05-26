@@ -113,6 +113,7 @@ struct SingleFrame: View {
                 }
             }
         }
+        
         func handleWindowOpening(selected: String) {
             guard let open = appViewModel.openMiniInNewTab else { return }
             open(webViewModel.currentURL, selected, true)
