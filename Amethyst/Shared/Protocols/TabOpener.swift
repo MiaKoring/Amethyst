@@ -47,15 +47,17 @@ extension TabOpener {
             let webViewModel = contentViewModel.tabs[index].webViewModel
             webViewModel.load(url: url)
         } else {
+            let id = UUID()
             // Otherwise, create a new tab.
             let webViewModel = WebViewModel(
                 contentViewModel: contentViewModel,
-                appViewModel: appViewModel
+                appViewModel: appViewModel,
+                id: id
             )
             
             webViewModel.load(url: url)
             
-            let newTab = ATab(webViewModel: webViewModel)
+            let newTab = ATab(id: id, webViewModel: webViewModel)
             contentViewModel.tabs.append(newTab)
             contentViewModel.currentTab = newTab.id
         }

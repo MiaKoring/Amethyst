@@ -11,7 +11,7 @@ struct ATab: Hashable, Equatable, Identifiable {
     var id: UUID
     var webViewModel: WebViewModel
     
-    init(id: UUID = UUID(), webViewModel: WebViewModel) {
+    init(id: UUID, webViewModel: WebViewModel) {
         self.id = id
         self.webViewModel = webViewModel
     }

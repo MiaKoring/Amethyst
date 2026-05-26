@@ -120,10 +120,10 @@ struct ContentView {
         
         if let newURL = appViewModel.newURLToOpen {
             appViewModel.newURLToOpen = nil
-            
-            let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel)
+            let id = UUID()
+            let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
             vm.load(url: newURL)
-            let newTab = ATab(webViewModel: vm)
+            let newTab = ATab(id: id, webViewModel: vm)
             
             contentViewModel.tabs.append(newTab)
             contentViewModel.currentTab = newTab.id
@@ -139,7 +139,7 @@ struct ContentView {
                         continue
                     }
                     memoizedIDs.append(id)
-                    let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel)
+                    let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
                     vm.load(urlString: savedTab.url?.absoluteString ?? "about:blank")
                     let newTab = ATab(id: id, webViewModel: vm)
                     tabs.append(newTab)
