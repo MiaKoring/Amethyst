@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 public struct AuthenticatorHelper {
     static func evaluatePasswordStrength(password: String) -> Double {
         let checker = PasswordChecker()

@@ -5,6 +5,7 @@
 //  Created by Mia Koring on 13.12.24.
 //
 import SwiftUI
+@MainActor
 enum KeybindsGroup: String, CaseIterable {
     case window = "Window"
     case sidebars = "Sidebars"

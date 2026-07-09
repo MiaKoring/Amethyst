@@ -16,14 +16,17 @@ extension WebViewModel: WKUIDelegate {
                 case .openInNewTab:
                     return openInNewTab(configuration: configuration)
                 case .openInBackground:
-                    let newWebViewModel = WebViewModel(config: configuration, contentViewModel: contentViewModel, appViewModel: appViewModel)
-                    let newTab = ATab(webViewModel: newWebViewModel)
+                    let id = UUID()
+                    let newWebViewModel = WebViewModel(config: configuration, contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
+                    let newTab = ATab(id: id, webViewModel: newWebViewModel)
                     contentViewModel.tabs.append(newTab)
                     
                     backgroundTabCreatedOverlayTimer?.invalidate()
                     backgroundTabCreatedOverlayTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] timer in
                         timer.invalidate()
-                        self?.backgroundTabCreatedOverlayTimer = nil
+                        Task { @MainActor in
+                            self?.backgroundTabCreatedOverlayTimer = nil
+                        }
                     }
                 return newWebViewModel.webView
             case .openInNewWindow:
@@ -131,9 +134,15 @@ extension WebViewModel: WKUIDelegate {
         }
     }
     
+    func webViewDidClose(_ webView: WKWebView) {
+        print("should close")
+        contentViewModel.closeTab(id: id)
+    }
+    
     private func openInNewTab(configuration: WKWebViewConfiguration) -> WKWebView? {
-        let newWebViewModel = WebViewModel(config: configuration, contentViewModel: contentViewModel, appViewModel: appViewModel)
-        let newTab = ATab(webViewModel: newWebViewModel)
+        let id = UUID()
+        let newWebViewModel = WebViewModel(config: configuration, contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
+        let newTab = ATab(id: id, webViewModel: newWebViewModel)
         if let index = contentViewModel.tabs.firstIndex(where: {$0.id == contentViewModel.currentTab}) {
             contentViewModel.tabs.insert(newTab, at: index + 1)
         } else {

@@ -48,8 +48,8 @@ struct InputBar: View {
     private func updateSuggestionDebounce() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
-            if text.count >= 2 {
-                Task {
+            Task { @MainActor in
+                if text.count >= 2 {
                     await timerSuggestionFetch()
                 }
             }

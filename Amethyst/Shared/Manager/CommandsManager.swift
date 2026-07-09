@@ -3,7 +3,7 @@ import TipKit
 
 @Observable
 final class CommandsManager: ShortcutFeatureManager {
-    static var shared = CommandsManager()
+    static let shared = CommandsManager()
     
     private init() {}
     

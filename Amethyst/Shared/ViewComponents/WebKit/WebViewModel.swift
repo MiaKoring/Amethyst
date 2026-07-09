@@ -8,9 +8,10 @@ import SwiftUI
 import SwiftData
 import WebKit
 import Combine
-import MeiliSearch
+@preconcurrency import MeiliSearch
 import AuthenticationServices
 
+@MainActor
 class WebViewModel: NSObject, ObservableObject {
     private static var accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
     @Published var canGoBack: Bool = false
@@ -35,6 +36,8 @@ class WebViewModel: NSObject, ObservableObject {
     var cancellables: Set<AnyCancellable> = []
     var cache: Bool? = nil
     
+    var id: UUID
+    
     // MARK: - Initializers
 
     // This is the new Designated Initializer. It's the most fundamental one.
@@ -42,10 +45,12 @@ class WebViewModel: NSObject, ObservableObject {
     init(
         configuration: WKWebViewConfiguration,
         contentViewModel: ContentViewModel,
-        appViewModel: AppViewModel
+        appViewModel: AppViewModel,
+        id: UUID
     ) {
         self.contentViewModel = contentViewModel
         self.appViewModel = appViewModel
+        self.id = id
         super.init()
 
         self.webView = AWKWebView(frame: .zero, configuration: configuration)
@@ -56,15 +61,16 @@ class WebViewModel: NSObject, ObservableObject {
     
     // Convenience init for a standard new tab.
     // It derives the processPool from the contentViewModel.
-    convenience init(contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
+    convenience init(contentViewModel: ContentViewModel, appViewModel: AppViewModel, id: UUID) {
         let config = Self.makeDefaultConfiguration()
         // No special configuration needed, so we call the designated init directly.
-        self.init(configuration: config, contentViewModel: contentViewModel, appViewModel: appViewModel)
+        self.init(configuration: config, contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
     }
     
-    init(config: WKWebViewConfiguration, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
+    init(config: WKWebViewConfiguration, contentViewModel: ContentViewModel, appViewModel: AppViewModel, id: UUID) {
         self.contentViewModel = contentViewModel
         self.appViewModel = appViewModel
+        self.id = id
         super.init()
         self.webView = AWKWebView(frame: .zero, configuration: config)
         self.webView?.allowsBackForwardNavigationGestures = false
@@ -78,27 +84,9 @@ class WebViewModel: NSObject, ObservableObject {
         injectAllJS()
     }
     
-    deinit {
+    func cleanup() async {
         webView?.stopLoading()
         
-        let userContentController = webView?.configuration.userContentController
-        userContentController?.removeAllUserScripts()
-        userContentController?.removeScriptMessageHandler(forName: "webauthn")
-        
-        webView?.uiDelegate = nil
-        webView?.navigationDelegate = nil
-        
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
-        
-        backgroundTabCreatedOverlayTimer?.invalidate()
-        downloadCreatedTimer?.invalidate()
-        
-        webView?.removeFromSuperview()
-        webView = nil
-    }
-    
-    func cleanup() async {
         // 1. Perform all async cleanup operations first.
         // We can safely await them here because we are in an async context
         // and the webView is guaranteed to still exist.
@@ -109,7 +97,6 @@ class WebViewModel: NSObject, ObservableObject {
 
         // 2. Perform synchronous cleanup.
         // This part is similar to the deinit logic.
-        webView?.stopLoading()
         webView?.load(URLRequest(url: URL(string: "about:blank")!))
 
         // 3. Break retain cycles. This is critical.

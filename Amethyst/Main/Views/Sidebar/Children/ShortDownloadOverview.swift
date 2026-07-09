@@ -28,6 +28,7 @@ struct ShortDownloadOverview: View {
     }
     
     func updateDisplayedItems() {
+        downloadsController.latestFour = downloadsController.fetchLatestFour()
         let active = appViewModel.downloadManager?.activeDownloads.prefix(4).map { item in
             DownloadItem(name: item.value.targetURL.lastPathComponent, dateCreated: Date.now.timeIntervalSinceReferenceDate, url: nil, icon: Image(nsImage: NSWorkspace.shared.icon(for: .init(item.value.targetURL.pathExtension) ?? .data)), info: item.value)
         }

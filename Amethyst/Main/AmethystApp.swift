@@ -19,7 +19,7 @@ struct AmethystApp: App {
     @State var appViewModel: AppViewModel
     
     var container: ModelContainer
-    static var subSystem = "de.touchthegrass.Amethyst"
+    static nonisolated let subSystem = "de.touchthegrass.Amethyst"
     static var logger = Logger(subsystem: Self.subSystem, category: "App")
     
     static var windowRound: CGFloat = { if #available(macOS 26.0, *) { 16 } else { 10 } }()

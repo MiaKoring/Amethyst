@@ -9,6 +9,7 @@ import SwiftUI
 import WebKit
 import Combine
 
+@MainActor
 class MiniWebViewModel: NSObject, ObservableObject {
     @Published var currentURL: URL? = nil
     @Published var canGoBack: Bool = false

@@ -77,7 +77,8 @@ struct Sidebar: View {
                     SidebarBottomButtonLabel(imageName: "bubble.left.and.bubble.right")
                         .help("Feedback")
                 }) {
-                    let tab = ATab(webViewModel: .init(contentViewModel: contentViewModel, appViewModel: appViewModel))
+                    let id = UUID()
+                    let tab = ATab(id: id, webViewModel: .init(contentViewModel: contentViewModel, appViewModel: appViewModel, id: id))
                     tab.webViewModel.load(urlString: "https://amethyst.featurebase.app")
                     contentViewModel.tabs.append(tab)
                     contentViewModel.currentTab = tab.id

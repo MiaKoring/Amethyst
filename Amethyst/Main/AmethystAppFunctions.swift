@@ -28,9 +28,10 @@ extension AmethystApp {
                 openWindow(id: "mainWindow")
                 return
             }
-            let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel)
+            let id = UUID()
+            let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
             vm.load(urlString: url?.absoluteString ?? "")
-            let tab = ATab(webViewModel: vm)
+            let tab = ATab(id: id, webViewModel: vm)
             contentViewModel.tabs.append(tab)
             if focus {
                 contentViewModel.currentTab = tab.id
@@ -74,9 +75,10 @@ extension AmethystApp {
                 openWindow(id: "mainWindow")
                 return
             }
-            let webVM = WebViewModel(contentViewModel: latestFocused, appViewModel: appViewModel)
+            let uuid = UUID()
+            let webVM = WebViewModel(contentViewModel: latestFocused, appViewModel: appViewModel, id: uuid)
             webVM.load(url: url)
-            let tab = ATab(webViewModel: webVM)
+            let tab = ATab(id: uuid, webViewModel: webVM)
             latestFocused.tabs.append(tab)
             latestFocused.currentTab = tab.id
             openWindow(id: latestFocused.id)

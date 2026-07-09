@@ -7,7 +7,7 @@
 
 import Foundation
 struct SEGoogle: SearchEngineAdaptor {
-    static var name: String = "Google"
+    static let name: String = "Google"
     
     static func quickResults(query: String) async -> [String] {
         guard let url = URL(string: "https://suggestqueries.google.com/complete/search?client=chrome&q=\(query.replacingOccurrences(of: " ", with: "+"))&type=json") else { return [] }

@@ -8,7 +8,7 @@
 
 import Foundation
 struct SEStartpage: SearchEngineAdaptor {
-    static var name: String = "Startpage"
+    static let name: String = "Startpage"
     
     static func quickResults(query: String) async -> [String] {
         guard let url = URL(string: "https://www.startpage.com/osuggestions?q=\(query.replacingOccurrences(of: " ", with: "+"))&type=json") else { return [] }

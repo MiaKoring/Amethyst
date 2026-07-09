@@ -5,9 +5,10 @@
 //  Created by Mia Koring on 02.12.24.
 //
 import Foundation
-import MeiliSearch
+@preconcurrency import MeiliSearch
 import SwiftUI
 
+@MainActor
 extension InputBar {
     func timerSuggestionFetch() async {
         if let bang = BangManager.shared.resolve(text) {
@@ -19,9 +20,9 @@ extension InputBar {
             return
         }
         if let meili = appViewModel.meili {
-            async let results = await fetchSearchEngineSuggestions()
-            async let meiliRes = await fetchHistorySuggestions(meili)
-            await makeResult(searchEngineList: results, meiliList: meiliRes)
+            let results = await fetchSearchEngineSuggestions()
+            let meiliRes = await fetchHistorySuggestions(meili)
+            makeResult(searchEngineList: results, meiliList: meiliRes)
         } else {
             let results = await fetchSearchEngineSuggestions()
             makeResult(searchEngineList: results, meiliList: nil)
@@ -47,33 +48,33 @@ extension InputBar {
     }
     
     private func fetchHistorySuggestions(_ meili: MeiliSearch) async -> [SearchSuggestion] {
-        typealias MeiliResult = Result<Searchable<HistoryEntryResult>, Swift.Error>
-        
-        let meiliItems: [SearchHit<HistoryEntryResult>] = await withCheckedContinuation { continuation in
-            meili.index("history").search(SearchParameters(
-                query: text,
-                limit: Self.suggestionItemMaxCount,
-                attributesToSearchOn: ["title", "url"],
-                sort: ["amount:desc", "lastSeen:desc"],
-                showRankingScore: true
-            )) { (result: MeiliResult) in
-                switch result {
-                case .success(let res):
-                    continuation.resume(returning: res.hits)
-                case .failure(let error):
-                    Self.logger.error("An error occured while fetching Meilisearch suggestions: \(error.localizedDescription)")
-                    continuation.resume(returning: [])
-                }
+        let query = text
+        let hits: [SearchHit<HistoryEntryResult>] = await {
+            do {
+                let params = SearchParameters(
+                    query: query,
+                    limit: 5,
+                    attributesToSearchOn: ["title", "url"],
+                    sort: ["amount:desc", "lastSeen:desc"],
+                    showRankingScore: true
+                )
+                let res: Searchable<HistoryEntryResult> = try await meili.index("history").search(params)
+                return res.hits
+            } catch {
+                return []
             }
-        }
+        }()
         
-        let meiliRes: [SearchSuggestion] = meiliItems.compactMap {
-            if ($0._rankingScore ?? 0) > 0.6 {
-                return SearchSuggestion(title: $0.title.isEmpty ? $0.url: $0.title, urlString: $0.url, origin: .history)
+        return hits.compactMap { hit in
+            if (hit._rankingScore ?? 0) > 0.6 {
+                return SearchSuggestion(
+                    title: hit.title.isEmpty ? hit.url : hit.title,
+                    urlString: hit.url,
+                    origin: .history
+                )
             }
             return nil
         }
-        return meiliRes
     }
     
     private func makeResult(

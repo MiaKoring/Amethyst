@@ -7,6 +7,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 enum SearchEngine: Int, CaseIterable {
     case duckduckgo
     case google
@@ -14,7 +15,7 @@ enum SearchEngine: Int, CaseIterable {
     case startpage
 }
 
-extension SearchEngine: Identifiable {
+extension SearchEngine: @MainActor Identifiable {
     var id: Int { self.rawValue }
     var logoName: String {
         switch self {

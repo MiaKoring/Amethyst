@@ -10,8 +10,9 @@ import WebKit
 import AuthenticationServices
 import OSLog
 
+@MainActor
 @Observable
-class ContentViewModel: NSObject, ObservableObject, Identifiable {
+class ContentViewModel: NSObject, ObservableObject, @MainActor Identifiable {
     var id: String
     var creationDate = Date()
     var triggerNewTab: Bool = false
@@ -73,6 +74,7 @@ class ContentViewModel: NSObject, ObservableObject, Identifiable {
     }
 }
 
+@MainActor
 struct ContentView {
     static let logger = Logger(subsystem: AmethystApp.subSystem, category: "ContentViewModel")
     
@@ -105,18 +107,23 @@ struct ContentView {
             object: nil,
             queue: .main
         ) { notification in
-            if contentViewModel.blockNotification { // to block reinserting the window on close
-                contentViewModel.blockNotification = false
-                return
+            Task {
+                await
+                MainActor.run {
+                    if contentViewModel.blockNotification { // to block reinserting the window on close
+                        contentViewModel.blockNotification = false
+                        return
+                    }
+                }
             }
         }
         
         if let newURL = appViewModel.newURLToOpen {
             appViewModel.newURLToOpen = nil
-            
-            let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel)
+            let id = UUID()
+            let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
             vm.load(url: newURL)
-            let newTab = ATab(webViewModel: vm)
+            let newTab = ATab(id: id, webViewModel: vm)
             
             contentViewModel.tabs.append(newTab)
             contentViewModel.currentTab = newTab.id
@@ -132,7 +139,7 @@ struct ContentView {
                         continue
                     }
                     memoizedIDs.append(id)
-                    let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel)
+                    let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
                     vm.load(urlString: savedTab.url?.absoluteString ?? "about:blank")
                     let newTab = ATab(id: id, webViewModel: vm)
                     tabs.append(newTab)

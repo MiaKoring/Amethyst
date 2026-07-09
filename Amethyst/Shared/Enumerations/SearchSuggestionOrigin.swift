@@ -1,6 +1,7 @@
 
 import SwiftUI
 
+@MainActor
 enum SearchSuggestionOrigin {
     case history
     case searchEngine

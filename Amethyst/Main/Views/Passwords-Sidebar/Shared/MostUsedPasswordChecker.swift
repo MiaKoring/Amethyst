@@ -8,6 +8,7 @@
 import Foundation
 import OSLog
 
+@MainActor
 class PasswordChecker {
     private static let logger = Logger(subsystem: AmethystApp.subSystem, category: "PasswordChecker")
     private var commonPasswords: Set<String> = []

@@ -7,7 +7,7 @@
 
 import SwiftUI
 import SwiftData
-import LocalAuthentication
+@preconcurrency import LocalAuthentication
 import AmethystAuthenticatorCore
 
 struct PasswordsContentView: View {
@@ -27,10 +27,10 @@ struct PasswordsContentView: View {
             isAuthenticated = UDKey.lastAuthTime.intValue + 60 * 30 > Int(Date.now.timeIntervalSinceReferenceDate)
             if isAuthenticated {
                 timer = Timer.scheduledTimer(withTimeInterval: Double(UDKey.lastAuthTime.intValue + 60 * 30) - Date.now.timeIntervalSinceReferenceDate, repeats: false) { timer in
-                    DispatchQueue.main.async {
+                    Task { @MainActor in
                         isAuthenticated = false
-                        timer.invalidate()
                     }
+                    timer.invalidate()
                 }
             }
         }
@@ -72,6 +72,7 @@ struct PasswordsContentView: View {
                 .keyboardShortcut(Keybind.triggerPasswordsAuth.keyboardShortcut)
             }
         }
+        
         func authenticate(withPasscode: Bool = false) {
             let context = LAContext()
             var error: NSError?
@@ -86,11 +87,13 @@ struct PasswordsContentView: View {
 
                 context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, authenticationError in
                     guard authenticationError == nil else {
-                        tryCode = true
+                        Task { @MainActor in
+                            tryCode = true
+                        }
                         authenticateWithPasscode()
                         return
                     }
-                    DispatchQueue.main.async {
+                    Task { @MainActor in
                         if success {
                             handleSuccess()
                         } else {
@@ -104,9 +107,9 @@ struct PasswordsContentView: View {
                 authenticateWithPasscode()
             }
             
-            func authenticateWithPasscode() {
+            @Sendable func authenticateWithPasscode() {
                 context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { completed, authenticationError in
-                    DispatchQueue.main.async {
+                    Task { @MainActor in
                         if completed {
                             handleSuccess()
                         }
@@ -114,14 +117,17 @@ struct PasswordsContentView: View {
                 }
             }
             
+            @Sendable
             func handleSuccess() {
-                isAuthenticated = true
-                UDKey.lastAuthTime.intValue = Int(Date.now.timeIntervalSinceReferenceDate)
-                tryCode = false
-                timer?.invalidate()
-                timer = Timer.scheduledTimer(withTimeInterval: Double(UDKey.lastAuthTime.intValue + 60 * 30) - Date.now.timeIntervalSinceReferenceDate, repeats: false) { timer in
-                    DispatchQueue.main.async {
-                        isAuthenticated = false
+                Task { @MainActor in
+                    isAuthenticated = true
+                    UDKey.lastAuthTime.intValue = Int(Date.now.timeIntervalSinceReferenceDate)
+                    tryCode = false
+                    timer?.invalidate()
+                    timer = Timer.scheduledTimer(withTimeInterval: Double(UDKey.lastAuthTime.intValue + 60 * 30) - Date.now.timeIntervalSinceReferenceDate, repeats: false) { timer in
+                        Task { @MainActor in
+                            isAuthenticated = false
+                        }
                         timer.invalidate()
                     }
                 }

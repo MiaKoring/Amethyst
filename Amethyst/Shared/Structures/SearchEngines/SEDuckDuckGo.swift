@@ -6,8 +6,9 @@
 //
 
 import Foundation
+
 struct SEDuckDuckGo: SearchEngineAdaptor {
-    static var name: String = "DuckDuckGo"
+    static let name: String = "DuckDuckGo"
     
     static func quickResults(query: String) async -> [String] {
         guard let url = URL(string: "https://duckduckgo.com/ac/?q=\(query.replacingOccurrences(of: " ", with: "+"))&type=json") else { return [] }

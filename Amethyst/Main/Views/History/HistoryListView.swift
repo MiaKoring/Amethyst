@@ -84,9 +84,10 @@ struct HistoryListView: View {
         
         func openItem(_ item: HistoryItem) {
             guard let url = item.url else { return }
-            let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel)
+            let id = UUID()
+            let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel, id: id)
             vm.load(urlString: url.absoluteString)
-            let tab = ATab(webViewModel: vm)
+            let tab = ATab(id: id, webViewModel: vm)
             contentViewModel.tabs.append(tab)
             if !shiftPressed {
                 contentViewModel.currentTab = tab.id

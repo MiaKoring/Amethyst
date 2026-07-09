@@ -10,6 +10,7 @@ import AmethystAuthenticatorCore
 import SwiftData
 import OSLog
 
+@MainActor
 struct AccountDetailEdit {
     @Bindable var account: Account
     @Query var accounts: [Account]
@@ -130,9 +131,11 @@ struct AccountDetailEdit {
         do {
             try context.transaction {
                 let newAccount = try Account(service: title, username: username, comment: "", password: password, allAccounts: accounts, strength: strength)
+                
+                let service = newAccount.service
                 Task {
-                    async let title = try? await Account.getTitle(from: newAccount.service)
-                    async let image = try? await Account.getImage(for: newAccount.service)
+                    async let title = try? await Account.getTitle(from: service)
+                    async let image = try? await Account.getImage(for: service)
                     
                     await newAccount.setImage(to: image)
                     if let title = await title {

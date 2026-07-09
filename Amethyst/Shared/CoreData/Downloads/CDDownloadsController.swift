@@ -9,21 +9,21 @@ import Foundation
 import CoreData
 import OSLog
 
-class CDDownloadsController: ObservableObject {
-    public static var shared = CDDownloadsController(name: "Downloads")
-    private static var logger = Logger(subsystem: AmethystApp.subSystem, category: "CDDownloadsController")
-    var container: NSPersistentContainer
+@MainActor
+final class CDDownloadsController: ObservableObject {
+    public static nonisolated let shared = CDDownloadsController(name: "Downloads")
+    private static nonisolated let logger = Logger(subsystem: AmethystApp.subSystem, category: "CDDownloadsController")
+    let container: NSPersistentContainer
     
     @Published var latestFour = [DownloadedItem]()
     
-    private init(name: String) {
+    private nonisolated init(name: String) {
         container = NSPersistentContainer(name: name)
         container.loadPersistentStores { _, error in
             if let error {
                 Self.logger.error("Error initializing CoreData: \(error.localizedDescription)")
             }
         }
-        latestFour = fetchLatestFour()
     }
     
     func fetchAll(sortDescriptors: [NSSortDescriptor] = []) -> [DownloadedItem] {

@@ -6,6 +6,7 @@
 //
 import SwiftUI
 
+@MainActor
 enum Keybind: String, CaseIterable, UserDefaultWrapper {
     case newWindow
     case toggleSidebar

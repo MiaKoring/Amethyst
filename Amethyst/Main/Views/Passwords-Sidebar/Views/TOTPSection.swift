@@ -85,7 +85,7 @@ struct TOTPSection: View {
             let nextUpdateTime = max(0.1, Double(remainingTime) + 0.1)
 
             totpTimer = Timer.scheduledTimer(withTimeInterval: nextUpdateTime, repeats: false) {_ in
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     withAnimation {
                         self.totpCode = self.getCurrentTOTP()
                     }

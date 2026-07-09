@@ -104,8 +104,10 @@ struct AccountDisplay: View {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(account.getCurrentTOTPCode() ?? "", forType: .string)
             Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
-                withAnimation {
-                    highlightCopied = false
+                Task { @MainActor in
+                    withAnimation {
+                        highlightCopied = false
+                    }
                 }
                 timer.invalidate()
             }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+@MainActor
 protocol SearchEngineAdaptor {
     static var name: String { get }
     static func quickResults(query: String) async -> [String]

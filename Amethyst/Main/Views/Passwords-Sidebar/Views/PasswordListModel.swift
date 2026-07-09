@@ -10,6 +10,7 @@ import SwiftData
 import AmethystAuthenticatorCore
 import OSLog
 
+@MainActor
 struct PasswordList {
     @Environment(ContentViewModel.self) var contentViewModel
     @Environment(PasswordSortData.self) var sortData

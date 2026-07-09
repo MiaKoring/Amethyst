@@ -9,8 +9,12 @@ import CoreData
 import OSLog
 import WebKit
 
+@MainActor
 @Observable
 class DownloadManager: NSObject {
+    @ObservationIgnored
+    private var observations = [WKDownload: NSKeyValueObservation]()
+    
     public static var downloadsExtension = "amthDownload"
     var activeDownloads: [WKDownload: DownloadInfo] = [:]
     
@@ -30,6 +34,14 @@ class DownloadManager: NSObject {
         
         activeDownloads[download] = downloadInfo
         Self.logger.info("Started tracking new WKDownload for \(filename)")
+        
+        observations[download] = download.progress.observe(\.fractionCompleted, options: [.new]) { [weak self, weak download] observedProgress, change in
+            guard let download, let newValue = change.newValue else { return }
+            
+            Task { @MainActor in
+                self?.updateProgress(for: download, progress: newValue, downloadedBytes: download.progress.completedUnitCount, totalBytes: download.progress.totalUnitCount)
+            }
+        }
     }
     
     func updateProgress(for download: WKDownload, progress: Double, downloadedBytes: Int64, totalBytes: Int64) {
@@ -41,6 +53,7 @@ class DownloadManager: NSObject {
     }
     
     func finishDownload(for download: WKDownload) {
+        defer { observations[download] = nil }
         guard let downloadInfo = activeDownloads.removeValue(forKey: download) else {
             Self.logger.warning("Finished download for an untracked WKDownload.")
             return
@@ -53,6 +66,8 @@ class DownloadManager: NSObject {
     }
     
     func failDownload(for download: WKDownload, error: Error, resumeData: Data?) {
+        defer { observations[download] = nil }
+        
         activeDownloads[download]?.didFail = true
         Self.logger.error("Download failed for \(download.debugDescription) with error: \(error.localizedDescription)")
         // TODO: Add resume logic
@@ -92,6 +107,8 @@ class DownloadManager: NSObject {
             Self.logger.error("failed to cancel download, recieved nil value")
             return
         }
+        defer { observations[download] = nil }
+        
         if let info = activeDownloads[download],
            let destination = info.destinationURL {
             download.cancel()

@@ -9,7 +9,7 @@ import SwiftUI
 import WebKit
 import OSLog
 
-
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     var appViewModel: AppViewModel?
     private static var logger = Logger(subsystem: AmethystApp.subSystem, category: "AppDelegate")
@@ -43,7 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         BangManager.shared.fetch()
         CommandsManager.shared.fetch()
-        DispatchQueue.main.async {
+        Task { @MainActor in
             let hasVisibleContentWindows = NSApp.windows.contains { window in
                 window.isVisible && window.canBecomeMain
             }

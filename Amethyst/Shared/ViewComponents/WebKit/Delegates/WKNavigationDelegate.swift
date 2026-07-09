@@ -63,7 +63,7 @@ extension WebViewModel: WKNavigationDelegate {
     func webView(
         _ webView: WKWebView,
         decidePolicyFor navigationResponse: WKNavigationResponse,
-        decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void
+        decisionHandler: @escaping @MainActor @Sendable (WKNavigationResponsePolicy) -> Void
     ) {
         guard let response = navigationResponse.response as? HTTPURLResponse,
               let url = response.url else {

@@ -12,6 +12,7 @@ enum MeiliSettings: String, MeiliUserDefaultWrapper {
     static let defaults: UserDefaults = UserDefaults(suiteName: AppDelegate.settingsGroupID)!
 }
 
+@MainActor
 protocol MeiliUserDefaultWrapper: CaseIterable, RawRepresentable where RawValue == String  {
     static var defaults: UserDefaults { get }
 }
