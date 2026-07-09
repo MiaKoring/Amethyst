@@ -52,6 +52,10 @@ extension WebViewModel: WKNavigationDelegate {
             return .download
         }
         
+        if navigationAction.targetFrame == nil {
+            return .cancel
+        }
+        
         return .allow
     }
     
