@@ -8,6 +8,9 @@ import WebKit
 
 extension WebViewModel: WKUIDelegate {
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        
+        // TODO: handle targetframe nil as open separate small context login type window
+        
         if let customAction = (webView as? AWKWebView)?.contextualMenuAction {
             switch customAction {
                 case .openInNewTab:
