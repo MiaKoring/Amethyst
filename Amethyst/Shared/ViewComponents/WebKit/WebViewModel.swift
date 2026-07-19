@@ -207,6 +207,8 @@ class WebViewModel: NSObject, ObservableObject {
                         Self.logger.error("Error occured while configuring Meili index: \(error.localizedDescription)")
                     }
                 }
+            } catch {
+                Self.logger.error("Unexpected Error while adding to history: \(error.localizedDescription)")
             }
         }
     }
